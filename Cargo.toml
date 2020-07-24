@@ -5,3 +5,8 @@ authors = ["alex wennerberg <alex@alexwennerberg.com>"]
 edition = "2018"
 
 [dependencies]
+rusqlite = "*"
+actix-web = "2.0"
+actix-rt = "1.0"
+askama = "0.10"
+askama_actix = "0.10"
