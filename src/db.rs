@@ -2,12 +2,14 @@ use rusqlite::{Connection, Result};
 use rusqlite::NO_PARAMS;
 
 pub fn initialize_tables() -> Result<()> {
-    let conn = Connection::open("cats.db")?;
+    let conn = Connection::open("app.db")?;
 
     conn.execute(
-        "create table if not exists cat_colors (
+        "create table if not exists users (
              id integer primary key,
              name text not null unique
+             email text not null unique
+             password text
          )",
         NO_PARAMS,
     )?;

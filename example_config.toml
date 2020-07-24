@@ -1,0 +1,4 @@
+db_path = "flounder.db"
+file_directory = "files"
+tls_enabled = false
+server_name = "flounder.local:5000"
