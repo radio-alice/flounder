@@ -552,6 +552,7 @@ dependencies = [
  "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "askama 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "askama_actix 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gmi2html 0.1.0 (git+https://github.com/alexwennerberg/gmi2html)",
  "rusqlite 0.23.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.114 (registry+https://github.com/rust-lang/crates.io-index)",
  "toml 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -684,6 +685,11 @@ dependencies = [
 name = "gimli"
 version = "0.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
+name = "gmi2html"
+version = "0.1.0"
+source = "git+https://github.com/alexwennerberg/gmi2html#1f509304fe05590362fab80f17295c0886f50e60"
 
 [[package]]
 name = "h2"
@@ -1602,6 +1608,7 @@ dependencies = [
 "checksum fxhash 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 "checksum getrandom 0.1.14 (registry+https://github.com/rust-lang/crates.io-index)" = "7abc8dd8451921606d809ba32e95b6111925cd2906060d2dcc29c070220503eb"
 "checksum gimli 0.22.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aaf91faf136cb47367fa430cd46e37a788775e7fa104f8b4bcb3861dc389b724"
+"checksum gmi2html 0.1.0 (git+https://github.com/alexwennerberg/gmi2html)" = "<none>"
 "checksum h2 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "993f9e0baeed60001cf565546b0d3dbe6a6ad23f2bd31644a133c641eccf6d53"
 "checksum hashbrown 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "34f595585f103464d8d2f6e9864682d74c1601fed5e07d62b1c9058dba8246fb"
 "checksum heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)" = "20564e78d53d2bb135c343b3f47714a56af2061f1c928fdb541dc7b9fdd94205"

@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::path::Path;
 use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use gmi2html;
 mod db;
 
 #[derive(Deserialize)]
@@ -12,7 +13,7 @@ struct Config {
 }
 
 async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+    HttpResponse::Ok().body(&gmi2html::convert("Hello world!"))
 }
 
 #[actix_rt::main]

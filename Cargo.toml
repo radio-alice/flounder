@@ -12,3 +12,4 @@ actix-rt = "1.0"
 askama = "0.10"
 askama_actix = "0.10"
 toml = "0.5"
+gmi2html = {version="0.1.0", git="https://github.com/alexwennerberg/gmi2html"}
