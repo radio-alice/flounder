@@ -10,11 +10,11 @@ use futures::{StreamExt, TryStreamExt};
 use gmi2html;
 use rusqlite::{params, Connection, Result, NO_PARAMS};
 use serde::Deserialize;
+use std::ffi::OsStr;
 use std::io::Write;
 use std::path::Path;
 use std::str;
 use std::sync::Mutex;
-use std::ffi::OsStr;
 use utils::rendered_time_ago;
 mod client;
 mod templates;
@@ -41,9 +41,13 @@ struct LoginForm {
 
 // hacking actix_identity to store user and id
 // id, then name
-fn parse_identity(id: String) -> (String, String) { // TODO fix this shit
+fn parse_identity(id: String) -> (String, String) {
+    // TODO fix this shit
     let mut split = id.split_whitespace();
-    (split.next().unwrap().to_string(), split.next().unwrap().to_string())
+    (
+        split.next().unwrap().to_string(),
+        split.next().unwrap().to_string(),
+    )
 }
 
 // TODO user login auth
@@ -90,12 +94,16 @@ struct RegisterForm {
 impl RegisterForm {
     fn validate(&self) -> bool {
         // username must be letters numbers hyphens
-        if !self.username.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'){
-            return false
+        if !self
+            .username
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-')
+        {
+            return false;
         }
         if !self.email.contains("@") {
             // world's dumbest email verification (we dont really use email)
-            return false
+            return false;
         }
         return self.password == self.password2;
     }
@@ -128,8 +136,8 @@ async fn register(
         .execute(&[&form.username, &form.email, &hashed_pass])
         .unwrap(); // error handling
                    //
-    // id.remember(form.username.clone());
-    // redirect to my site
+                   // id.remember(form.username.clone());
+                   // redirect to my site
     Ok(HttpResponse::Found().header("Location", "/login").finish())
 }
 
@@ -199,13 +207,13 @@ async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
         .into_response()
     } else {
         // flash you must be logged in?
-        Ok(HttpResponse::Found().header("Location", "/login").finish()) // TODO 
+        Ok(HttpResponse::Found().header("Location", "/login").finish()) // TODO
     }
 }
 
 async fn twtxt_statuses() -> impl Responder {
     // TODO -- a wrapper around twtxt
-    HttpResponse::Found().header("Location", "/login").finish() // TODO 
+    HttpResponse::Found().header("Location", "/login").finish() // TODO
 }
 
 #[derive(Deserialize)]
@@ -213,11 +221,17 @@ struct EditFileForm {
     file_text: String,
 }
 
-async fn edit_file_page(id: Identity, local_path: web::Path<(String)>, config: web::Data<Config>) -> impl Responder {
+async fn edit_file_page(
+    id: Identity,
+    local_path: web::Path<(String)>,
+    config: web::Data<Config>,
+) -> impl Responder {
     // read file to string
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let filename = sanitize_filename::sanitize(local_path.as_str());
-    let full_path = Path::new(&config.file_directory).join(&username).join(&filename); // TODO sanitize
+    let full_path = Path::new(&config.file_directory)
+        .join(&username)
+        .join(&filename); // TODO sanitize
     let file_text = std::fs::read_to_string(full_path).unwrap_or("".to_string());
     let template = EditFileTemplate {
         filename: filename,
@@ -226,96 +240,135 @@ async fn edit_file_page(id: Identity, local_path: web::Path<(String)>, config: w
     template.into_response()
 }
 
-async fn edit_file(id: Identity, form: web::Form<EditFileForm>, local_path: web::Path<String>, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, Error> {
+async fn edit_file(
+    id: Identity,
+    form: web::Form<EditFileForm>,
+    local_path: web::Path<String>,
+    conn: DbConn,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, Error> {
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(local_path.as_str());
-    let full_path = Path::new(&config.file_directory).join(&username).join(filename); 
+    let full_path = Path::new(&config.file_directory)
+        .join(&username)
+        .join(filename);
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
-        .open(&full_path).unwrap();
+        .open(&full_path)
+        .unwrap();
     file.write(form.file_text.as_bytes()).unwrap();
-    let mut stmt = conn.prepare_cached(
-    r#"
+    let mut stmt = conn
+        .prepare_cached(
+            r#"
         INSERT INTO file (user_path, user_id, full_path)
         VALUES (?1, ?2, ?3)
         ON CONFLICT(full_path) DO UPDATE SET
         updated_at=strftime('%s', 'now')
     "#,
-    )
-    .unwrap(); // get id, login with it
+        )
+        .unwrap(); // get id, login with it
     let res = stmt
-    .execute(&[filename, &user_id, full_path.to_str().unwrap()])
-    .unwrap(); // error handling
+        .execute(&[filename, &user_id, full_path.to_str().unwrap()])
+        .unwrap(); // error handling
 
-    Ok(HttpResponse::Found().header("Location", "/my_site").finish()) // TODO g
+    Ok(HttpResponse::Found()
+        .header("Location", "/my_site")
+        .finish()) // TODO g
 }
 
 /// Overwrites existing files
 /// copied from update_file a lot. TODO merge
-async fn upload_file(id: Identity, mut payload: Multipart, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, Error> {
+async fn upload_file(
+    id: Identity,
+    mut payload: Multipart,
+    conn: DbConn,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, Error> {
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let conn = conn.lock().unwrap();
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
         let filename = &sanitize_filename::sanitize(content_type.get_filename().unwrap());
-        let full_path = Path::new(&config.file_directory).join(&username).join(filename); // TODO sanitize
-        // File::create is blocking operation, use threadpool
+        let full_path = Path::new(&config.file_directory)
+            .join(&username)
+            .join(filename); // TODO sanitize
+                             // File::create is blocking operation, use threadpool
         let mut f = web::block(move || {
             // create dirs if dne
             std::fs::create_dir_all(full_path.parent().unwrap()).ok();
             std::fs::File::create(full_path)
         })
-            .await
-            .unwrap();
-        let full_path = Path::new(&config.file_directory).join(&username).join(filename); // TODO sanitize
-        // Field in turn is stream of *Bytes* object
+        .await
+        .unwrap();
+        let full_path = Path::new(&config.file_directory)
+            .join(&username)
+            .join(filename); // TODO sanitize
+                             // Field in turn is stream of *Bytes* object
         while let Some(chunk) = field.next().await {
             let data = chunk.unwrap();
             // filesystem operations are blocking, we have to use threadpool
             f = web::block(move || f.write_all(&data).map(|_| f)).await?;
         }
-    let mut stmt = conn.prepare_cached(
-        r#"
+        let mut stmt = conn
+            .prepare_cached(
+                r#"
         INSERT INTO file (user_path, user_id, full_path)
         VALUES (?1, ?2, ?3)
         ON CONFLICT(full_path) DO UPDATE SET
         updated_at=strftime('%s', 'now')
         "#,
-    )
-    .unwrap(); // get id, login with it
-    let res = stmt
-        .execute(&[filename, &user_id, full_path.to_str().unwrap()])
-        .unwrap(); // error handling
- 
-    // currently insecure
-    // read this good content
-    // https://stackoverflow.com/questions/256172/what-is-the-most-secure-method-for-uploading-a-file
-    // read neocities
+            )
+            .unwrap(); // get id, login with it
+        let res = stmt
+            .execute(&[filename, &user_id, full_path.to_str().unwrap()])
+            .unwrap(); // error handling
+
+        // currently insecure
+        // read this good content
+        // https://stackoverflow.com/questions/256172/what-is-the-most-secure-method-for-uploading-a-file
+        // read neocities
     }
-    Ok(HttpResponse::Found().header("Location", "/my_site").finish()) // TODO g
+    Ok(HttpResponse::Found()
+        .header("Location", "/my_site")
+        .finish()) // TODO g
 }
 
-async fn delete_file(conn: DbConn, id: Identity, path: web::Path<(String)>, config: web::Data<Config>) -> impl Responder {
+async fn delete_file(
+    conn: DbConn,
+    id: Identity,
+    path: web::Path<(String)>,
+    config: web::Data<Config>,
+) -> impl Responder {
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(path.as_str());
-    let full_path = Path::new(&config.file_directory).join(&username).join(filename); // TODO sanitize
+    let full_path = Path::new(&config.file_directory)
+        .join(&username)
+        .join(filename); // TODO sanitize
     let mut f = web::block(move || {
         // create dirs if dne
         std::fs::remove_file(full_path)
-    }).await.ok();
+    })
+    .await
+    .ok();
 
-    let mut stmt = conn.prepare_cached(r#"
+    let mut stmt = conn
+        .prepare_cached(
+            r#"
     DELETE FROM file where file.user_path = (?)
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
     stmt.execute(&[&filename]).unwrap();
     // verify idetntiy
     // remove file from dir
     // delete from db
-    HttpResponse::Found().header("Location", "/my_site").finish() // TODO g
+    HttpResponse::Found()
+        .header("Location", "/my_site")
+        .finish() // TODO g
 }
 
 async fn proxy_gemini(path: web::Path<(String)>) -> impl Responder {
@@ -324,28 +377,32 @@ async fn proxy_gemini(path: web::Path<(String)>) -> impl Responder {
     let string = gmi2html::GeminiConverter::new(str::from_utf8(&response.unwrap().1).unwrap())
         .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
         .to_html();
-    let template = GmiPageTemplate {
-        html_block: string
-    };
+    let template = GmiPageTemplate { html_block: string };
     template.into_response()
 }
 
 /// Rather than route through the gmi server, we write an
 /// HTTP client that behaves like the gmi proxy, for performance
 /// replace some w/ nginx?
-async fn serve_user_content(path: web::Path<(String, String)>, r: HttpRequest, config: web::Data<Config>) -> Result<HttpResponse, Error> {
+async fn serve_user_content(
+    path: web::Path<(String, String)>,
+    r: HttpRequest,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, Error> {
     let username = &path.0;
     let filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
-    let full_path = Path::new(&config.file_directory).join(&username).join(filename);
+    let full_path = Path::new(&config.file_directory)
+        .join(&username)
+        .join(filename);
     // empty path render index
-    if full_path.extension() == Some(OsStr::new("gmi")) || full_path.extension() == Some(OsStr::new("gemini")) {
+    if full_path.extension() == Some(OsStr::new("gmi"))
+        || full_path.extension() == Some(OsStr::new("gemini"))
+    {
         let gmi_file = std::fs::read_to_string(full_path).unwrap();
         let string = gmi2html::GeminiConverter::new(&gmi_file)
             .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
             .to_html();
-        let template = GmiPageTemplate {
-            html_block: string
-        };
+        let template = GmiPageTemplate { html_block: string };
         return template.into_response();
     }
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
@@ -388,7 +445,10 @@ async fn main() -> std::io::Result<()> {
             .route("/register", web::post().to(register))
             .route("/register", web::get().to(register_page))
             .route("/upload", web::post().to(upload_file))
-            .route("/user/{username}/{user_file_path}", web::get().to(serve_user_content))
+            .route(
+                "/user/{username}/{user_file_path}",
+                web::get().to(serve_user_content),
+            )
             .route("/edit/{user_file_path}", web::get().to(edit_file_page))
             .route("/edit/{user_file_path}", web::post().to(edit_file))
             .route("/delete/{user_file_path}", web::post().to(delete_file))
