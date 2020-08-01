@@ -1,4 +1,5 @@
 db_path = "flounder.db"
-file_directory = "files"
+file_directory = "tmp"
 tls_enabled = false
 server_name = "flounder.local:5000"
+serve_all_content = true

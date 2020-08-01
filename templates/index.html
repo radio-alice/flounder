@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Flounder!</h1>
+  {% include "header.html" %}
+  <h2>Recently updated files:</h2>
+    {% for file in files %}
+    <div><b>{{ file.username }}</b> <em>{{file.updated_at}}</em> <a href="/user/{{file.username}}/{{file.user_path}}">{{ file.user_path }}</a>  </div>
+    {% endfor %}
+{% endblock %}

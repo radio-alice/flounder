@@ -1,0 +1,31 @@
+main{
+  max-width:70ch;
+  padding:2ch;
+  margin:auto;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.inline {
+  display: inline;
+}
+
+.button {
+background-color: white; /* Green */
+border: 1px solid black;
+text-align: center;
+text-decoration: none;
+display: inline-block;
+  transition-duration: 0.1s;
+}
+
+.button:hover {
+  background-color: darkgrey; 
+  color: white;
+}
+
+body {
+  background-color: #bfeaf5;
+}
+a {
+  color: #623821;
+}

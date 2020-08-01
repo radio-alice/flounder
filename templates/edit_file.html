@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Editing {{filename}}</h2>
+
+<form id="edit-form" action="" method="POST">
+  <textarea rows="20" name="text_file" id="editor">{{file_text}}</textarea>
+  <br>
+  <input type="submit" value="Save file" class="button">
+</form>
+
+<script src="/static/js/codemirror.js"></script>
+<link rel="stylesheet" href="/static/styles/codemirror.css">
+<script>
+    var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+          lineNumbers: true,
+          lineWrapping: true,
+        });
+</script>
+{%endblock%}
