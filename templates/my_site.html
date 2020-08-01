@@ -4,7 +4,7 @@
 {% include "header.html" %}
 {% for file in files %}
 <p>
-<div><em>{{file.updated_at}}</em> <a href="/user/{{file.username}}/{{file.user_path}}">{{ file.user_path }}</a> update <form action="/delete/{{file.user_path}}" method="POST" class="inline"> <input class="button" type="submit" value="delete"></form>
+<div><em>{{file.updated_at}}</em> <a href="/user/{{file.username}}/{{file.user_path}}">{{ file.user_path }}</a> <a href="/edit/{{file.user_path}}">edit</a> <form action="/delete/{{file.user_path}}" method="POST" class="inline"> <input class="button" type="submit" value="delete"></form>
 </div>
 </p>
 {% endfor %}

@@ -201,14 +201,28 @@ async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
     }
 }
 
-async fn twtxt_statuses() {
+async fn twtxt_statuses() -> impl Responder {
     // TODO -- a wrapper around twtxt
+    HttpResponse::Found().header("Location", "/login").finish() // TODO 
 }
 
 #[derive(Deserialize)]
 struct EditFileForm {
     filename: String,
     file_text: String,
+}
+
+async fn edit_file_page(id: Identity, local_path: web::Path<(String)>, config: web::Data<Config>) -> impl Responder {
+    // read file to string
+    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+    let filename = sanitize_filename::sanitize(local_path.as_str());
+    let full_path = Path::new(&config.file_directory).join(&username).join(&filename); // TODO sanitize
+    let file_text = std::fs::read_to_string(full_path).unwrap();
+    let template = EditFileTemplate {
+        filename: filename,
+        file_text: file_text,
+    };
+    template.into_response()
 }
 
 /// Overwrites existing files
@@ -321,6 +335,7 @@ async fn main() -> std::io::Result<()> {
             .data(conn)
             .data(config)
             .route("/", web::get().to(index))
+            .route("/statuses", web::get().to(twtxt_statuses))
             // TODO -- setup to use nginx in production
             .service(fs::Files::new("/static", "./static").show_files_listing()) // TODO configurable
             .route("/proxy/{gemini_url}", web::get().to(proxy_gemini))
@@ -332,7 +347,7 @@ async fn main() -> std::io::Result<()> {
             .route("/register", web::get().to(register_page))
             .route("/upload", web::post().to(upload_file))
             .route("/user/{username}/{user_file_path}", web::get().to(serve_user_content))
-            // .route("/user/{username}/{user_file_path}/edit", web::get().to(register_page))
+            .route("/edit/{user_file_path}", web::get().to(edit_file_page))
             .route("/delete/{user_file_path}", web::post().to(delete_file))
     })
     .bind("127.0.0.1:8088")?
