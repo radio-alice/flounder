@@ -210,7 +210,6 @@ async fn twtxt_statuses() -> impl Responder {
 
 #[derive(Deserialize)]
 struct EditFileForm {
-    filename: String,
     file_text: String,
 }
 
@@ -219,12 +218,39 @@ async fn edit_file_page(id: Identity, local_path: web::Path<(String)>, config: w
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let filename = sanitize_filename::sanitize(local_path.as_str());
     let full_path = Path::new(&config.file_directory).join(&username).join(&filename); // TODO sanitize
-    let file_text = std::fs::read_to_string(full_path).unwrap();
+    let file_text = std::fs::read_to_string(full_path).unwrap_or("".to_string());
     let template = EditFileTemplate {
         filename: filename,
         file_text: file_text,
     };
     template.into_response()
+}
+
+async fn edit_file(id: Identity, form: web::Form<EditFileForm>, local_path: web::Path<String>, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, Error> {
+    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+    let conn = conn.lock().unwrap();
+    let filename = &sanitize_filename::sanitize(local_path.as_str());
+    let full_path = Path::new(&config.file_directory).join(&username).join(filename); 
+    let mut file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&full_path).unwrap();
+    file.write(form.file_text.as_bytes()).unwrap();
+    let mut stmt = conn.prepare_cached(
+    r#"
+        INSERT INTO file (user_path, user_id, full_path)
+        VALUES (?1, ?2, ?3)
+        ON CONFLICT(full_path) DO UPDATE SET
+        updated_at=strftime('%s', 'now')
+    "#,
+    )
+    .unwrap(); // get id, login with it
+    let res = stmt
+    .execute(&[filename, &user_id, full_path.to_str().unwrap()])
+    .unwrap(); // error handling
+
+    Ok(HttpResponse::Found().header("Location", "/my_site").finish()) // TODO g
 }
 
 /// Overwrites existing files
@@ -364,6 +390,7 @@ async fn main() -> std::io::Result<()> {
             .route("/upload", web::post().to(upload_file))
             .route("/user/{username}/{user_file_path}", web::get().to(serve_user_content))
             .route("/edit/{user_file_path}", web::get().to(edit_file_page))
+            .route("/edit/{user_file_path}", web::post().to(edit_file))
             .route("/delete/{user_file_path}", web::post().to(delete_file))
     })
     .bind("127.0.0.1:8088")?
