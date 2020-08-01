@@ -27,7 +27,7 @@ pub struct IndexTemplate {
 pub struct RenderedFile {
     pub username: String,
     pub user_path: String,
-    pub updated_at: u32,
+    pub time_ago: String,
 }
 
 #[derive(Template)]
@@ -51,4 +51,10 @@ pub struct RegisterTemplate {}
 pub struct EditFileTemplate {
     pub filename: String,
     pub file_text: String,
+}
+
+#[derive(Template)]
+#[template(path = "gmi_page.html")]
+pub struct GmiPageTemplate {
+    pub html_block: String,
 }

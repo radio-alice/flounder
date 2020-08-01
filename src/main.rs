@@ -14,9 +14,11 @@ use std::io::Write;
 use std::path::Path;
 use std::str;
 use std::sync::Mutex;
-
+use std::ffi::OsStr;
+use utils::rendered_time_ago;
 mod client;
 mod templates;
+mod utils;
 
 use templates::*;
 
@@ -149,7 +151,7 @@ async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, Error> {
             Ok(RenderedFile {
                 username: row.get(0)?,
                 user_path: row.get(1)?,
-                updated_at: row.get(2)?,
+                time_ago: rendered_time_ago(row.get(2).unwrap()),
             })
         })
         .unwrap(); // TODO better error handling
@@ -186,7 +188,7 @@ async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
                 Ok(RenderedFile {
                     username: username.clone(), // TODO remove clone
                     user_path: row.get(0)?,
-                    updated_at: row.get(1)?,
+                    time_ago: rendered_time_ago(row.get(1).unwrap()),
                 })
             })
             .unwrap();
@@ -296,17 +298,31 @@ async fn proxy_gemini(path: web::Path<(String)>) -> impl Responder {
     let string = gmi2html::GeminiConverter::new(str::from_utf8(&response.unwrap().1).unwrap())
         .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
         .to_html();
-    HttpResponse::Ok().body(string)
+    let template = GmiPageTemplate {
+        html_block: string
+    };
+    template.into_response()
 }
 
 /// Rather than route through the gmi server, we write an
 /// HTTP client that behaves like the gmi proxy, for performance
-/// replaced with nginx in production
-async fn serve_user_content(path: web::Path<(String, String)>, config: web::Data<Config>) -> impl Responder {
+/// replace some w/ nginx?
+async fn serve_user_content(path: web::Path<(String, String)>, r: HttpRequest, config: web::Data<Config>) -> Result<HttpResponse, Error> {
     let username = &path.0;
     let filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
     let full_path = Path::new(&config.file_directory).join(&username).join(filename);
-    fs::NamedFile::open(full_path).unwrap() // todo error
+    // empty path render index
+    if full_path.extension() == Some(OsStr::new("gmi")) || full_path.extension() == Some(OsStr::new("gemini")) {
+        let gmi_file = std::fs::read_to_string(full_path).unwrap();
+        let string = gmi2html::GeminiConverter::new(&gmi_file)
+            .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
+            .to_html();
+        let template = GmiPageTemplate {
+            html_block: string
+        };
+        return template.into_response();
+    }
+    fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
 }
 
 // https://actix.rs/docs/extractors/
