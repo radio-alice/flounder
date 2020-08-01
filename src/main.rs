@@ -211,11 +211,6 @@ async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
     }
 }
 
-async fn twtxt_statuses() -> impl Responder {
-    // TODO -- a wrapper around twtxt
-    HttpResponse::Found().header("Location", "/login").finish() // TODO
-}
-
 #[derive(Deserialize)]
 struct EditFileForm {
     file_text: String,
@@ -434,7 +429,6 @@ async fn main() -> std::io::Result<()> {
             .data(conn)
             .data(config)
             .route("/", web::get().to(index))
-            .route("/statuses", web::get().to(twtxt_statuses))
             // TODO -- setup to use nginx in production
             .service(fs::Files::new("/static", "./static").show_files_listing()) // TODO configurable
             .route("/proxy/{gemini_url}", web::get().to(proxy_gemini))
