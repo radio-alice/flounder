@@ -1,7 +1,7 @@
 use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
-use actix_web::middleware::Logger;
+use actix_web::middleware::{NormalizePath, Logger};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
 use actix_web::error as actix_error;
 use bcrypt;
@@ -20,7 +20,6 @@ use utils::rendered_time_ago;
 use error::FlounderError;
 
 mod templates;
-mod client;
 mod utils;
 mod error;
 
@@ -35,6 +34,7 @@ struct Config {
     tls_enabled: bool,
     server_name: String,
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
+    proxy_url: String,
 }
 
 #[derive(Deserialize)]
@@ -360,16 +360,6 @@ async fn delete_file(
         .finish()) // TODO g
 }
 
-async fn proxy_gemini(path: web::Path<String>) -> Result<HttpResponse, FlounderError> {
-    let response = client::get_data(&format!("gemini://{}/", path.to_string()));
-    // Optional raw query parameter
-    let string = gmi2html::GeminiConverter::new(str::from_utf8(&response.unwrap().1).unwrap())
-        .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
-        .to_html();
-    let template = GmiPageTemplate { html_block: string };
-    template.into_response()
-}
-
 /// Rather than route through the gmi server, we write an
 /// HTTP client that behaves like the gmi proxy, for performance
 /// replace some w/ nginx?
@@ -389,7 +379,7 @@ async fn serve_user_content(
     {
         let gmi_file = std::fs::read_to_string(full_path).unwrap();
         let string = gmi2html::GeminiConverter::new(&gmi_file)
-            .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
+            .proxy_url(&config.proxy_url)
             .to_html();
         let template = GmiPageTemplate { html_block: string };
         return Ok(template.into_response().unwrap());
@@ -413,6 +403,7 @@ async fn main() -> std::io::Result<()> {
         let conn = Mutex::new(Connection::open("app.db").unwrap()); // TODO config, error?
         App::new()
             .wrap(Logger::default())
+            .wrap(NormalizePath)
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&[0; 32])
                     // domain?
@@ -422,10 +413,10 @@ async fn main() -> std::io::Result<()> {
             ))
             .data(conn)
             .data(config)
+            .app_data(web::PayloadConfig::new(32000))
             .route("/", web::get().to(index))
             // TODO -- setup to use nginx in production
             .service(fs::Files::new("/static", "./static").show_files_listing()) // TODO configurable
-            .route("/proxy/{gemini_url}", web::get().to(proxy_gemini))
             .route("/my_site", web::get().to(my_site))
             .route("/login", web::post().to(login)) // TODO consolidate
             .route("/login", web::get().to(login_page))
