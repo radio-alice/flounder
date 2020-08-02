@@ -145,7 +145,7 @@ async fn register(
     Ok(HttpResponse::Found().header("Location", "/login").finish())
 }
 
-async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderError> {
+async fn index(id: Identity, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
     let conn = conn.lock().unwrap(); // TODO
     let mut stmt = conn
         .prepare_cached(
@@ -167,6 +167,7 @@ async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderError
         })?;
     let template = IndexTemplate {
         logged_in: id.identity().is_some(),
+        server_name: &config.server_name,
         files: res.map(|a| a.unwrap()).collect(),
     };
     template.into_response()
@@ -180,7 +181,7 @@ async fn login_page() -> Result<HttpResponse, FlounderError> {
     LoginTemplate {}.into_response()
 }
 
-async fn my_site(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderError> {
+async fn my_site(id: Identity, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
     // replace impl with specific
     if let Some(idstr) = id.identity() {
         let (user_id, username) = parse_identity(idstr);
@@ -203,6 +204,7 @@ async fn my_site(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderErr
             }).map_err(actix_error::ErrorInternalServerError)?;
         MySiteTemplate {
             logged_in: true,
+            server_name: &config.server_name,
             files: res.map(|a| a.unwrap()).collect(),
         }
         .into_response()
@@ -251,7 +253,7 @@ async fn edit_file(
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename);
-    std::fs::create_dir_all(full_path.parent().unwrap()).ok();
+        std::fs::create_dir_all(full_path.parent().unwrap()).ok();
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)

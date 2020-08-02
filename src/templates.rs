@@ -21,8 +21,9 @@ impl<T: askama::Template> TemplateIntoResponse for T {
 
 #[derive(Template)]
 #[template(path = "index.html")]
-pub struct IndexTemplate {
+pub struct IndexTemplate<'a> {
     pub logged_in: bool,
+    pub server_name: &'a str,
     pub files: Vec<RenderedFile>, // arr?
 }
 
@@ -34,8 +35,9 @@ pub struct RenderedFile {
 
 #[derive(Template)]
 #[template(path = "my_site.html")]
-pub struct MySiteTemplate {
+pub struct MySiteTemplate<'a> {
     pub logged_in: bool,
+    pub server_name: &'a str,
     pub files: Vec<RenderedFile>, // arr?
 }
 #[derive(Template)]
