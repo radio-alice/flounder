@@ -137,9 +137,10 @@ async fn register(
         VALUES (?1, ?2, ?3)
         "#,
         )?;
+    // let user_id = conn.last_insert_rowid(); // TODO issues?
     let res = stmt
-        .execute(&[&form.username, &form.email, &hashed_pass])?;
-                   // id.remember(form.username.clone());
+        .execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass])?;
+    // id.remember(format!("{} {}", user_id.to_string(), form.username.to_lowercase())); // awk
                    // redirect to my site
     Ok(HttpResponse::Found().header("Location", "/login").finish())
 }
@@ -253,8 +254,8 @@ async fn edit_file(
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
-        .truncate(true)
         .create(true)
+        .truncate(true)
         .open(&full_path)?;
     file.write(form.file_text.as_bytes())?;
     let mut stmt = conn
@@ -320,10 +321,7 @@ async fn upload_file(
         let res = stmt
             .execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
 
-        // currently insecure
-        // read this good content
-        // https://stackoverflow.com/questions/256172/what-is-the-most-secure-method-for-uploading-a-file
-        // read neocities
+        // TODO work on security
     }
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
