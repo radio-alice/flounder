@@ -2,12 +2,14 @@ use actix_web::{error::ErrorInternalServerError, Error, HttpResponse};
 use askama::*;
 use bytes::BytesMut;
 
+use crate::error::FlounderError;
+
 pub trait TemplateIntoResponse {
-    fn into_response(&self) -> ::std::result::Result<HttpResponse, Error>;
+    fn into_response(&self) -> ::std::result::Result<HttpResponse, FlounderError>;
 }
 
 impl<T: askama::Template> TemplateIntoResponse for T {
-    fn into_response(&self) -> ::std::result::Result<HttpResponse, Error> {
+    fn into_response(&self) -> std::result::Result<HttpResponse, FlounderError> {
         let mut buffer = BytesMut::with_capacity(self.size_hint());
         self.render_into(&mut buffer)
             .map_err(|_| ErrorInternalServerError("Template parsing error"))?;
@@ -57,4 +59,10 @@ pub struct EditFileTemplate {
 #[template(path = "gmi_page.html")]
 pub struct GmiPageTemplate {
     pub html_block: String,
+}
+
+#[derive(Template)]
+#[template(path = "error.html")]
+pub struct ErrorTemplate {
+    pub error: String,
 }

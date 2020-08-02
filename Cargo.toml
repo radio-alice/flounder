@@ -14,6 +14,7 @@ actix-web = "2.0"
 askama = "0.10"
 bcrypt = "0.8"
 bytes = "0.5.6"
+derive_more = "*"
 env_logger = "0.7.1"
 futures = "0.3.5"
 gmi2html = {version="0.1.2", git="https://github.com/alexwennerberg/gmi2html"}

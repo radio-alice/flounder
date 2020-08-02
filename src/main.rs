@@ -3,12 +3,13 @@ use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::error as actix_error;
 use bcrypt;
 use env_logger;
 use env_logger::Env;
 use futures::{StreamExt, TryStreamExt};
 use gmi2html;
-use rusqlite::{params, Connection, Result, NO_PARAMS};
+use rusqlite::{Connection, Result, NO_PARAMS};
 use serde::Deserialize;
 use std::ffi::OsStr;
 use std::io::Write;
@@ -16,9 +17,12 @@ use std::path::Path;
 use std::str;
 use std::sync::Mutex;
 use utils::rendered_time_ago;
-mod client;
+use error::FlounderError;
+
 mod templates;
+mod client;
 mod utils;
+mod error;
 
 use templates::*;
 
@@ -51,7 +55,7 @@ fn parse_identity(id: String) -> (String, String) {
 }
 
 // TODO user login auth
-async fn login(id: Identity, conn: DbConn, form: web::Form<LoginForm>) -> impl Responder {
+async fn login(id: Identity, conn: DbConn, form: web::Form<LoginForm>) -> Result<HttpResponse, FlounderError> {
     let conn = conn.lock().unwrap();
     let mut stmt = conn
         .prepare_cached(
@@ -59,22 +63,20 @@ async fn login(id: Identity, conn: DbConn, form: web::Form<LoginForm>) -> impl R
         SELECT id, password_hash from user 
         WHERE user.username = (?)
         "#,
-        )
-        .unwrap();
+        )?;
     // user does not exist etc
     let (user_id, password_hash): (u32, String) = stmt
         .query_row(&[&form.username], |row| {
             Ok((row.get(0).unwrap(), row.get(1).unwrap()))
-        })
-        .unwrap();
+        })?;
     if bcrypt::verify(&form.password, &password_hash).unwrap() {
         // flash?
         id.remember(format!("{} {}", user_id.to_string(), form.username)); // awk
-        HttpResponse::Found()
+        Ok(HttpResponse::Found()
             .header("Location", "/my_site")
-            .finish() // TODO
+            .finish()) // TODO
     } else {
-        HttpResponse::Found().header("Location", "/login").finish() // TODO
+        Ok(HttpResponse::Found().header("Location", "/login").finish()) 
     }
 }
 
@@ -114,7 +116,7 @@ async fn register(
     req: HttpRequest,
     conn: DbConn,
     form: web::Form<RegisterForm>,
-) -> Result<HttpResponse, Error> {
+) -> Result<HttpResponse, FlounderError> {
     // validate
     if !form.validate() {
         // flash errors
@@ -130,20 +132,16 @@ async fn register(
         INSERT INTO user (username, email, password_hash)
         VALUES (?1, ?2, ?3)
         "#,
-        )
-        .unwrap(); // get id, store it, redirect home
+        )?;
     let res = stmt
-        .execute(&[&form.username, &form.email, &hashed_pass])
-        .unwrap(); // error handling
-                   //
+        .execute(&[&form.username, &form.email, &hashed_pass])?;
                    // id.remember(form.username.clone());
                    // redirect to my site
     Ok(HttpResponse::Found().header("Location", "/login").finish())
 }
 
-async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, Error> {
-    // check if logged in
-    let conn = conn.lock().unwrap(); // I think this works. async is hard
+async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderError> {
+    let conn = conn.lock().unwrap(); // TODO
     let mut stmt = conn
         .prepare_cached(
             r#"
@@ -151,18 +149,17 @@ async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, Error> {
         FROM file 
         JOIN user
         ON file.user_id = user.id
+        ORDER BY file.updated_at DESC
         LIMIT 100"#,
-        )
-        .unwrap();
+        )?;
     let res = stmt
         .query_map(NO_PARAMS, |row| {
             Ok(RenderedFile {
                 username: row.get(0)?,
                 user_path: row.get(1)?,
-                time_ago: rendered_time_ago(row.get(2).unwrap()),
+                time_ago: rendered_time_ago(row.get(2)?)
             })
-        })
-        .unwrap(); // TODO better error handling
+        })?;
     let template = IndexTemplate {
         logged_in: id.identity().is_some(),
         files: res.map(|a| a.unwrap()).collect(),
@@ -170,19 +167,19 @@ async fn index(id: Identity, conn: DbConn) -> Result<HttpResponse, Error> {
     template.into_response()
 }
 
-async fn register_page() -> Result<HttpResponse, Error> {
+async fn register_page() -> Result<HttpResponse, FlounderError> {
     Ok(RegisterTemplate {}.into_response().unwrap())
 }
 
-async fn login_page() -> Result<HttpResponse, Error> {
+async fn login_page() -> Result<HttpResponse, FlounderError> {
     LoginTemplate {}.into_response()
 }
 
-async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
+async fn my_site(id: Identity, conn: DbConn) -> Result<HttpResponse, FlounderError> {
     // replace impl with specific
     if let Some(idstr) = id.identity() {
         let (user_id, username) = parse_identity(idstr);
-        let conn = conn.lock().unwrap();
+        let conn = conn.lock().map_err(|_| actix_error::ErrorInternalServerError("Internal Server Error"))?;
         let mut stmt = conn
             .prepare_cached(
                 r#"
@@ -196,10 +193,9 @@ async fn my_site(id: Identity, conn: DbConn) -> impl Responder {
                 Ok(RenderedFile {
                     username: username.clone(), // TODO remove clone
                     user_path: row.get(0)?,
-                    time_ago: rendered_time_ago(row.get(1).unwrap()),
+                    time_ago: rendered_time_ago(row.get(1)?),
                 })
-            })
-            .unwrap();
+            }).map_err(actix_error::ErrorInternalServerError)?;
         MySiteTemplate {
             logged_in: true,
             files: res.map(|a| a.unwrap()).collect(),
@@ -218,11 +214,12 @@ struct EditFileForm {
 
 async fn edit_file_page(
     id: Identity,
-    local_path: web::Path<(String)>,
+    local_path: web::Path<String>,
     config: web::Data<Config>,
-) -> impl Responder {
+) -> Result<HttpResponse, FlounderError> {
     // read file to string
-    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+    let identity = id.identity().ok_or(error::FlounderError::UnauthorizedError)?;
+    let (user_id, username) = parse_identity(identity);
     let filename = sanitize_filename::sanitize(local_path.as_str());
     let full_path = Path::new(&config.file_directory)
         .join(&username)
@@ -232,7 +229,7 @@ async fn edit_file_page(
         filename: filename,
         file_text: file_text,
     };
-    template.into_response()
+    return template.into_response();
 }
 
 async fn edit_file(
@@ -241,8 +238,9 @@ async fn edit_file(
     local_path: web::Path<String>,
     conn: DbConn,
     config: web::Data<Config>,
-) -> Result<HttpResponse, Error> {
-    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+) -> Result<HttpResponse, FlounderError> {
+    let identity = id.identity().ok_or(error::FlounderError::UnauthorizedError)?;
+    let (user_id, username) = parse_identity(identity);
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(local_path.as_str());
     let full_path = Path::new(&config.file_directory)
@@ -252,9 +250,8 @@ async fn edit_file(
         .read(true)
         .write(true)
         .create(true)
-        .open(&full_path)
-        .unwrap();
-    file.write(form.file_text.as_bytes()).unwrap();
+        .open(&full_path)?;
+    file.write(form.file_text.as_bytes())?;
     let mut stmt = conn
         .prepare_cached(
             r#"
@@ -263,11 +260,9 @@ async fn edit_file(
         ON CONFLICT(full_path) DO UPDATE SET
         updated_at=strftime('%s', 'now')
     "#,
-        )
-        .unwrap(); // get id, login with it
+        )?;
     let res = stmt
-        .execute(&[filename, &user_id, full_path.to_str().unwrap()])
-        .unwrap(); // error handling
+        .execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
 
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
@@ -281,7 +276,8 @@ async fn upload_file(
     mut payload: Multipart,
     conn: DbConn,
     config: web::Data<Config>,
-) -> Result<HttpResponse, Error> {
+) -> Result<HttpResponse, FlounderError> {
+    let identity = id.identity().ok_or(error::FlounderError::UnauthorizedError)?;
     let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
     let conn = conn.lock().unwrap();
     while let Ok(Some(mut field)) = payload.try_next().await {
@@ -297,15 +293,15 @@ async fn upload_file(
             std::fs::File::create(full_path)
         })
         .await
-        .unwrap();
+            .unwrap();
         let full_path = Path::new(&config.file_directory)
             .join(&username)
             .join(filename); // TODO sanitize
                              // Field in turn is stream of *Bytes* object
         while let Some(chunk) = field.next().await {
-            let data = chunk.unwrap();
+            let data = chunk?;
             // filesystem operations are blocking, we have to use threadpool
-            f = web::block(move || f.write_all(&data).map(|_| f)).await?;
+            f = web::block(move || f.write_all(&data).map(|_| f)).await.unwrap();
         }
         let mut stmt = conn
             .prepare_cached(
@@ -315,11 +311,9 @@ async fn upload_file(
         ON CONFLICT(full_path) DO UPDATE SET
         updated_at=strftime('%s', 'now')
         "#,
-            )
-            .unwrap(); // get id, login with it
+            )?;
         let res = stmt
-            .execute(&[filename, &user_id, full_path.to_str().unwrap()])
-            .unwrap(); // error handling
+            .execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
 
         // currently insecure
         // read this good content
@@ -334,16 +328,17 @@ async fn upload_file(
 async fn delete_file(
     conn: DbConn,
     id: Identity,
-    path: web::Path<(String)>,
+    path: web::Path<String>,
     config: web::Data<Config>,
-) -> impl Responder {
-    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+) -> Result<HttpResponse, FlounderError>{
+    let identity = id.identity().ok_or(error::FlounderError::UnauthorizedError)?;
+    let (user_id, username) = parse_identity(identity); // fail otheriwse
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(path.as_str());
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename); // TODO sanitize
-    let mut f = web::block(move || {
+    let f = web::block(move || {
         // create dirs if dne
         std::fs::remove_file(full_path)
     })
@@ -355,18 +350,17 @@ async fn delete_file(
             r#"
     DELETE FROM file where file.user_path = (?)
     "#,
-        )
-        .unwrap();
-    stmt.execute(&[&filename]).unwrap();
+        )?;
+    stmt.execute(&[&filename])?;
     // verify idetntiy
     // remove file from dir
     // delete from db
-    HttpResponse::Found()
+    Ok(HttpResponse::Found()
         .header("Location", "/my_site")
-        .finish() // TODO g
+        .finish()) // TODO g
 }
 
-async fn proxy_gemini(path: web::Path<(String)>) -> impl Responder {
+async fn proxy_gemini(path: web::Path<String>) -> Result<HttpResponse, FlounderError> {
     let response = client::get_data(&format!("gemini://{}/", path.to_string()));
     // Optional raw query parameter
     let string = gmi2html::GeminiConverter::new(str::from_utf8(&response.unwrap().1).unwrap())
@@ -398,7 +392,7 @@ async fn serve_user_content(
             .proxy_url("https://flounder.local:5000/proxy/") // TODO make into static str
             .to_html();
         let template = GmiPageTemplate { html_block: string };
-        return template.into_response();
+        return Ok(template.into_response().unwrap());
     }
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
 }
