@@ -251,6 +251,7 @@ async fn edit_file(
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename);
+    std::fs::create_dir_all(full_path.parent().unwrap()).ok();
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
