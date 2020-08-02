@@ -253,6 +253,7 @@ async fn edit_file(
     let mut file = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
+        .truncate(true)
         .create(true)
         .open(&full_path)?;
     file.write(form.file_text.as_bytes())?;
@@ -364,6 +365,11 @@ async fn delete_file(
         .finish()) // TODO g
 }
 
+async fn redirect_home(path: web::Path<String>) -> Result<HttpResponse, Error>{
+    Ok(HttpResponse::Found()
+        .header("Location", format!("/user/{}/index.gmi", path).as_str())
+        .finish()) // TODO g
+}
 /// Rather than route through the gmi server, we write an
 /// HTTP client that behaves like the gmi proxy, for performance
 /// replace some w/ nginx?
@@ -373,7 +379,7 @@ async fn serve_user_content(
     config: web::Data<Config>,
 ) -> Result<HttpResponse, Error> {
     let username = &path.0;
-    let filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
+    let mut filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename);
@@ -431,6 +437,10 @@ async fn main() -> std::io::Result<()> {
             .route(
                 "/user/{username}/{user_file_path}",
                 web::get().to(serve_user_content),
+            )
+            .route(
+                "/user/{username}",
+                web::get().to(redirect_home),
             )
             .route("/edit/{user_file_path}", web::get().to(edit_file_page))
             .route("/edit/{user_file_path}", web::post().to(edit_file))

@@ -1,19 +1,14 @@
 # Welcome to Flounder!
-
 ## About
-
 Flounder is an ultra-lightweight platform for making small websites. It uses a new internet protocol called Gemini. Gemini is http as it was in, say, the early 90s: extremely simple, easy to use and understand. There's no tracking, no hidden code that runs in your browser, not even styles! Just lightly styled plain text and files.
 
 ## Links
-
 You can link to other sites using the following syntax:
-
-=> https://google.com google
-=> https://alexwennerberg.com
-=> gemini://alexwennerberg.com
+=> https://gemini.circumlunar.space/ Learn more about Gemini!
+=> gemini://gemini.circumlunar.space/ Access the Gemini Network
+=> newfile.gmi New File (doesn't exist yet -- try creating it!)
 
 Unformatted text can be displayed like this:
-
 ```
 In a Station of the Metro
 by Ezra Pound
@@ -23,17 +18,14 @@ Petals on a wet, black bough.
 ```
 
 Lists look like this:
-
 * I
 * Love
 * Flounder!
 
 And quotes look like this:
-
 > To live is to suffer, to survive is to find some meaning in the suffering. - Friedrich Nietzsche
 
 For more information, check out the full Gemini text guide:
-
 => https://proxy.vulpes.one/gemini/gemini.circumlunar.space/docs/gemtext.gmi
 
-To get started, edit this page! You can also upload files of any type, as long as they're less than 32KB in size.
+To get started, edit this page! You can also upload files of any type, as long as they're less than 32KB in size. Your site will be live at <your_username>.<domain>

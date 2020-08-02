@@ -8,8 +8,15 @@
 </div>
 </p>
 {% endfor %}
-</ul>
-
+<noscript>Create a new file by going to /edit/{filename}</noscript>
+<input id="edit_new"> <a href="#" id="create_new">Create New File</a>
+<br>
+<script>
+    var input = document.getElementById('edit_new');
+    var create = document.getElementById('create_new');
+    input.onchange = input.onkeyup = function() {create.href = "/edit/" + input.value;};
+</script>
+<br>
 <form action="/upload" enctype="multipart/form-data" method="POST">
   <input type="file" id="myFile" name="file">
   <input type="submit" value="Upload File" class="button">
