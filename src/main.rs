@@ -91,11 +91,15 @@ struct RegisterForm {
     email: String,
     password: String,
     password2: String,
+    secret: String,
 }
 
 impl RegisterForm {
     fn validate(&self) -> bool {
         // username must be letters numbers hyphens
+        if !(self.secret == "flounderfan69") { // for debug
+            return false;
+        }
         if !self
             .username
             .chars()
