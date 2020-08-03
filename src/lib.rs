@@ -25,6 +25,8 @@ mod error;
 
 use templates::*;
 
+static base_index: &[u8] = include_bytes!("baseIndex.gmi");
+
 type DbConn = web::Data<Mutex<Connection>>;
 
 #[derive(Deserialize, Clone)]
@@ -111,6 +113,9 @@ impl RegisterForm {
             // world's dumbest email verification (we dont really use email)
             return false;
         }
+        if self.password.len() < 6 {
+            return false;
+        }
         return self.password == self.password2;
     }
 }
@@ -120,6 +125,7 @@ async fn register(
     req: HttpRequest,
     conn: DbConn,
     form: web::Form<RegisterForm>,
+    config: web::Data<Config>
 ) -> Result<HttpResponse, FlounderError> {
     // validate
     if !form.validate() {
@@ -137,12 +143,32 @@ async fn register(
         VALUES (?1, ?2, ?3)
         "#,
         )?;
-    // let user_id = conn.last_insert_rowid(); // TODO issues?
     let res = stmt
         .execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass])?;
-    // id.remember(format!("{} {}", user_id.to_string(), form.username.to_lowercase())); // awk
+
+    let user_id = conn.last_insert_rowid(); // maybe this works
+
+    // todo dont repeat;
+    let filename = "index.gmi";
+    let full_path = Path::new(&config.file_directory)
+        .join(&form.username)
+        .join(filename); // TODO sanitize
+    std::fs::create_dir_all(&full_path.parent().unwrap()).ok();
+    let mut f = std::fs::File::create(&full_path)?;
+    f.write(&base_index);
+    let mut stmt = conn
+    .prepare_cached(
+        r#"
+    INSERT INTO file (user_path, user_id, full_path)
+    VALUES (?1, ?2, ?3)
+    "#,
+    )?;
+    let res = stmt
+    .execute(&[filename, &user_id.to_string(), &full_path.to_str().unwrap()])?;
+
+    id.remember(format!("{} {}", user_id.to_string(), form.username.to_lowercase())); // awk
                    // redirect to my site
-    Ok(HttpResponse::Found().header("Location", "/login").finish())
+    Ok(HttpResponse::Found().header("Location", "/").finish())
 }
 
 async fn index(id: Identity, conn: DbConn, config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
