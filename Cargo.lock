@@ -339,6 +339,32 @@ version = "0.4.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "argh"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "argh_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "argh_shared 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "argh_derive"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "argh_shared 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "heck 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "proc-macro2 1.0.19 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.35 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "argh_shared"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "askama"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -683,6 +709,7 @@ dependencies = [
  "actix-rt 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-session 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "argh 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "askama 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "bcrypt 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bytes 0.5.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2017,6 +2044,9 @@ dependencies = [
 "checksum adler 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ee2a4ec343196209d6594e19543ae87a39f96d5534d7174822a3ad825dd6ed7e"
 "checksum aho-corasick 0.7.13 (registry+https://github.com/rust-lang/crates.io-index)" = "043164d8ba5c4c3035fec9bbee8647c0261d788f3474306f93bb65901cae0e86"
 "checksum arc-swap 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "4d25d88fd6b8041580a654f9d0c581a047baee2b3efee13275f2fc392fc75034"
+"checksum argh 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ca1877e24cecacd700d469066e0160c4f8497cc5635367163f50c8beec820154"
+"checksum argh_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e742194e0f43fc932bcb801708c2b279d3ec8f527e3acda05a6a9f342c5ef764"
+"checksum argh_shared 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e1ba68f4276a778591e36a0c348a269888f3a177c8d2054969389e3b59611ff5"
 "checksum askama 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b7acc25b09d27eaec97794c58d8483a227f2adc98b762f915745525d8781dba0"
 "checksum askama_derive 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "6f7dc4c28f064af8bbba24867ec6c3165c645635cb1306bca4c0f991ce8b15a9"
 "checksum askama_escape 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)" = "90c108c1a94380c89d2215d0ac54ce09796823cca0fd91b299cfff3b33e346fb"
