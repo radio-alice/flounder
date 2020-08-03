@@ -2,6 +2,12 @@
 ## About
 Flounder is an ultra-lightweight platform for making small websites. It uses a new internet protocol called Gemini. Gemini is http as it was in, say, the early 90s: extremely simple, easy to use and understand. There's no tracking, no hidden code that runs in your browser, not even styles! Just lightly styled plain text and files.
 
+To build your site, create a file with a .gmi extension. Flounder will convert these files to html.
+
+Explain gmi
+
+Explain 32kb
+
 ## Links
 You can link to other sites using the following syntax:
 => https://gemini.circumlunar.space/ Learn more about Gemini!

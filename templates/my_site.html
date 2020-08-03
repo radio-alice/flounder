@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Flounder: Manage Your Site</h1>
+<h1>🐟Flounder: Manage Your Site</h1>
 {% include "header.html" %}
 {% for file in files %}
 <p>
-<div><em>updated {{file.time_ago}}</em> <a href="https://{{file.username}}.{{server_name}}/{{file.user_path}}">{{ file.user_path }}</a> <a href="/edit/{{file.user_path}}">edit</a> <form action="/delete/{{file.user_path}}" method="POST" class="inline"> <input class="button" type="submit" value="delete"></form>
+<div><em>updated {{file.time_ago}}</em> <a href="https://{{file.username}}.{{server_name}}/{{file.user_path}}">{{ file.user_path }}</a> <a href="/edit/{{file.user_path}}">edit</a> <form action="/delete/{{file.user_path}}" method="POST" class="inline"> <input class="button" type="submit" onclick="return confirm('Are you sure you want to delete this file??!');" value="delete"></form>
 </div>
 </p>
 {% endfor %}
-<noscript>Create a new file by going to /edit/{filename}</noscript>
-<input id="edit_new"> <a href="#" id="create_new">Create New File</a>
+<noscript>Create a new page by going to /edit/{filename}</noscript>
+<input id="edit_new" placeholder="e.g. new_page.gmi"> <a href="#" id="create_new">Create new page</a>
 <br>
 <script>
     var input = document.getElementById('edit_new');

@@ -2,7 +2,7 @@ main{
   max-width:70ch;
   padding:2ch;
   margin:auto;
-  font-family: "Courier New", Courier, monospace;
+  font-family: Helvetica, Arial, monospace;
 }
 
 .inline {
@@ -14,18 +14,22 @@ background-color: white; /* Green */
 border: 1px solid black;
 text-align: center;
 text-decoration: none;
+padding:2px 5px;
 display: inline-block;
-  transition-duration: 0.1s;
+  transition-duration: 0.2s;
 }
 
 .button:hover {
-  background-color: darkgrey; 
+  background-color: black; 
   color: white;
 }
 
-body {
-  background-color: #bfeaf5;
-}
 a {
-  color: #623821;
+  color: black;
+  transition-duration: 0.2s;
+}
+
+a:hover {
+  background-color: black; 
+  color: white;
 }
