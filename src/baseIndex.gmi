@@ -2,7 +2,7 @@
 ## About
 Flounder is an ultra-lightweight platform for making and sharing small websites. It consists of two components: the "my site" page, where you can edit your pages and upload small files, and the home page, where you can see other users' pages. Flounder is bare-bones simple. If you're looking for a place to start, maybe create a journal.gmi file where you can blog your thoughts. Any time you update it, it'll be pushed to the top of the home page.
 
-You can get started by editing this page or uploading any file less than 32KB in size.
+You can get started by editing this page or uploading any file less than 32KB in size. Your index.gmi file will be visible at <your-name>.flounder.online
 
 ## Links
 You can link to other sites using the following syntax:
