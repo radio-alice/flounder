@@ -9,7 +9,7 @@
 </p>
 {% endfor %}
 <noscript>Create a new page by going to /edit/{filename}</noscript>
-<input id="edit_new" placeholder="e.g. new_page.gmi"> <a href="#" id="create_new">Create new page</a>
+<input id="edit_new" placeholder="*.gmi or *.txt"> <a href="#" id="create_new">Create new page</a>
 <br>
 <script>
     var input = document.getElementById('edit_new');
@@ -18,7 +18,7 @@
 </script>
 <br>
 <form action="/upload" enctype="multipart/form-data" method="POST">
-  <input type="file" id="myFile" name="file">
-  <input type="submit" value="Upload File" class="button">
+  <input type="file" id="myFile" name="file" multiple>
+  <input type="submit" value="Upload file" class="button">
 </form>
 {% endblock %}

@@ -17,7 +17,7 @@ use std::io::Write;
 use std::path::Path;
 use std::str;
 use std::sync::Mutex;
-use utils::rendered_time_ago;
+use utils::*;
 
 mod error;
 mod templates;
@@ -295,6 +295,11 @@ async fn edit_file(
     let (user_id, username) = parse_identity(identity);
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(local_path.as_str());
+    if !ok_extension(filename) {
+        return Ok(HttpResponse::Found()
+            .header("Location", "/my_site")
+            .finish()) // TODO g
+    }
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename);
@@ -337,6 +342,9 @@ async fn upload_file(
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
         let filename = &sanitize_filename::sanitize(content_type.get_filename().unwrap());
+        if !ok_extension(filename) {
+            continue
+        }
         let full_path = Path::new(&config.file_directory)
             .join(&username)
             .join(filename); // TODO sanitize
