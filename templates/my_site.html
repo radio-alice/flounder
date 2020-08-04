@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>🐟Flounder: Managing {{username}}.{{server_name}}</h1>
+<h1>🐟Flounder: Managing <a href="https://{{username}}.{{server_name}}">{{username}}.{{server_name}}</a></h1>
 {% include "header.html" %}
 {% for file in files %}
 <p>
@@ -9,7 +9,7 @@
 </p>
 {% endfor %}
 <noscript>Create a new page by going to /edit/{filename}</noscript>
-<input id="edit_new" placeholder="*.gmi or *.txt"> <a href="#" id="create_new">Create new page</a>
+<input id="edit_new" placeholder="New file name, e.g. newfile.gmi"> <a href="#" id="create_new">Edit new page</a>
 <br>
 <script>
     var input = document.getElementById('edit_new');

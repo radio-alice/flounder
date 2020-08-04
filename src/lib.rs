@@ -182,7 +182,7 @@ async fn register(
         form.username.to_lowercase()
     )); // awk
         // redirect to my site
-    Ok(HttpResponse::Found().header("Location", "/").finish())
+    Ok(HttpResponse::Found().header("Location", "/edit/index.gmi").finish())
 }
 
 async fn index(
