@@ -463,6 +463,9 @@ async fn serve_user_content(
         || full_path.extension() == Some(OsStr::new("gemini"))
     {
         let gmi_file = std::fs::read_to_string(full_path).unwrap();
+        if r.query_string() =="raw=1" {
+            return Ok(HttpResponse::from(gmi_file));
+        }
         let string = gmi2html::GeminiConverter::new(&gmi_file)
             .proxy_url(&config.proxy_url)
             .to_html();
