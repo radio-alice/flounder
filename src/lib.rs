@@ -409,19 +409,14 @@ async fn delete_file(
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename); // TODO sanitize
-    web::block(move || {
-        // create dirs if dne
-        std::fs::remove_file(full_path)
-    })
-    .await
-    .ok();
+    std::fs::remove_file(&full_path).ok();
 
     let mut stmt = conn.prepare_cached(
         r#"
-    DELETE FROM file where file.user_path = (?)
+    DELETE FROM file where file.full_path = (?)
     "#,
     )?;
-    stmt.execute(&[&filename])?;
+    stmt.execute(&[&full_path.to_str()])?;
     // verify idetntiy
     // remove file from dir
     // delete from db
