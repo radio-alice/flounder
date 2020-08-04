@@ -441,6 +441,7 @@ async fn serve_home(
     let gmi_file = std::fs::read_to_string(full_path).unwrap();
     let string = gmi2html::GeminiConverter::new(&gmi_file)
         .proxy_url(&config.proxy_url)
+        .inline_images(true)
         .to_html();
     let template = GmiPageTemplate { html_block: string };
     return Ok(template.into_response().unwrap());
@@ -468,6 +469,7 @@ async fn serve_user_content(
         }
         let string = gmi2html::GeminiConverter::new(&gmi_file)
             .proxy_url(&config.proxy_url)
+            .inline_images(true)
             .to_html();
         let template = GmiPageTemplate { html_block: string };
         return Ok(template.into_response().unwrap());
