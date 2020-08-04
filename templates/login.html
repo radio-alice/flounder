@@ -14,6 +14,7 @@
         <input id="password" name="password" type="password" value=""><br>
         
     </p>
+    <div class="error">{% for error in errors %}<p>{{error}}</p>{% endfor %}</div>
     <p><input id="submit" class="button" name="submit" type="submit" value="Sign In"></p>
 </form>
    <p>New User? <a href="/register">Click to register!</a></p>

@@ -75,15 +75,17 @@ async fn login(
     // user does not exist etc
     let (user_id, password_hash): (u32, String) = stmt.query_row(&[&form.username], |row| {
         Ok((row.get(0).unwrap(), row.get(1).unwrap()))
-    })?;
-    if bcrypt::verify(&form.password, &password_hash).unwrap() {
+    }).unwrap_or((0, "notahash".to_string())); // TODO make less awk
+    if let Ok(true) = bcrypt::verify(&form.password, &password_hash) {
         // flash?
         id.remember(format!("{} {}", user_id.to_string(), form.username)); // awk
         Ok(HttpResponse::Found()
             .header("Location", "/my_site")
             .finish()) // TODO
     } else {
-        Ok(HttpResponse::Found().header("Location", "/login").finish())
+        // render login page w errors
+        let template = LoginTemplate{errors: vec!["Invalid username or password!"]};
+        return template.into_response();
     }
 }
 
@@ -102,27 +104,33 @@ struct RegisterForm {
 }
 
 impl RegisterForm {
-    fn validate(&self, secret_key: &str) -> bool {
-        // username must be letters numbers hyphens
+    fn get_errors(&self, secret_key: &str) -> Vec<&str> {
+        let mut errors = vec![];
+        if self.username.len() > 32 || self.username == "" || &self.username.to_lowercase() == "www" {
+            errors.push("Invalid username")
+        }
         if !(self.secret == secret_key) {
             // for debug
-            return false;
+            errors.push("Invalid secret key");
         }
         if !self
             .username
             .chars()
             .all(|c| c.is_ascii_alphanumeric() || c == '-')
         {
-            return false;
+            errors.push("Username must only contain a-z characters and hyphens");
         }
         if !self.email.contains("@") {
             // world's dumbest email verification (we dont really use email)
-            return false;
+            errors.push("Email is invalid");
         }
         if self.password.len() < 6 {
-            return false;
+            errors.push("Please use a password at least 6 characters long. Preferably longer.");
         }
-        return self.password == self.password2;
+        if self.password != self.password2{
+            errors.push("Passwords do not match");
+        }
+        return errors;
     }
 }
 
@@ -133,11 +141,9 @@ async fn register(
     config: web::Data<Config>,
 ) -> Result<HttpResponse, FlounderError> {
     // validate
-    if !form.validate(&config.secret_key) {
-        // flash errors
-        return Ok(HttpResponse::Found()
-            .header("Location", "/register")
-            .finish()); // TODO g
+    let errors = form.get_errors(&config.secret_key);
+    if errors.len() > 0 {
+        return RegisterTemplate {errors: errors, server_name: &config.server_name}.into_response();
     }
     let hashed_pass = bcrypt::hash(&form.password, bcrypt::DEFAULT_COST).unwrap();
     let conn = conn.lock().unwrap();
@@ -147,7 +153,10 @@ async fn register(
         VALUES (?1, ?2, ?3)
         "#,
     )?;
-    stmt.execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass])?;
+    match stmt.execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass]) {
+        Ok(_) => (),
+        Err(_) => return RegisterTemplate {errors: vec!["Username or email already taken"], server_name: &config.server_name}.into_response()
+    }
 
     let user_id = conn.last_insert_rowid(); // maybe this works
 
@@ -207,11 +216,11 @@ async fn index(
 }
 
 async fn register_page(config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
-    Ok(RegisterTemplate {server_name: &config.server_name}.into_response().unwrap())
+    RegisterTemplate {errors: vec![], server_name: &config.server_name}.into_response()
 }
 
 async fn login_page() -> Result<HttpResponse, FlounderError> {
-    LoginTemplate {}.into_response()
+    LoginTemplate {errors: vec![]}.into_response()
 }
 
 async fn my_site(
@@ -245,6 +254,7 @@ async fn my_site(
         MySiteTemplate {
             logged_in: true,
             username: &username,
+            errors: vec![],
             server_name: &config.server_name,
             files: res.map(|a| a.unwrap()).collect(),
         }
@@ -477,7 +487,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
         let conn = Mutex::new(Connection::open(&config.db_path).unwrap()); // TODO config, error?
         App::new()
             .wrap(Logger::default())
-            .wrap(NormalizePath)
+            .wrap(NormalizePath) // does this do anything
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&[0; 32])
                     // domain?
@@ -488,7 +498,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .data(conn)
             .service(fs::Files::new("/static", &config.static_path).show_files_listing()) // TODO configurable
             .data(config)
-            .app_data(web::PayloadConfig::new(32000))
+            .app_data(web::PayloadConfig::new(32000)) // doesnt work
             .route("/", web::get().to(index))
             // TODO -- setup to use nginx in production
             .route("/my_site", web::get().to(my_site))
