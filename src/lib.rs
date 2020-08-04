@@ -488,7 +488,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .route("/register", web::get().to(register_page))
             .route("/upload", web::post().to(upload_file))
             .route(
-                "/user/{username}/{user_file_path}",
+                "/user/{username}/{user_file_path}/",
                 web::get().to(serve_user_content),
             )
             .route("/user/{username}", web::get().to(serve_home))
