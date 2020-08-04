@@ -206,8 +206,8 @@ async fn index(
     template.into_response()
 }
 
-async fn register_page() -> Result<HttpResponse, FlounderError> {
-    Ok(RegisterTemplate {}.into_response().unwrap())
+async fn register_page(config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
+    Ok(RegisterTemplate {server_name: &config.server_name}.into_response().unwrap())
 }
 
 async fn login_page() -> Result<HttpResponse, FlounderError> {
@@ -244,6 +244,7 @@ async fn my_site(
             .map_err(actix_error::ErrorInternalServerError)?;
         MySiteTemplate {
             logged_in: true,
+            username: &username,
             server_name: &config.server_name,
             files: res.map(|a| a.unwrap()).collect(),
         }

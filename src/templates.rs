@@ -38,6 +38,7 @@ pub struct RenderedFile {
 pub struct MySiteTemplate<'a> {
     pub logged_in: bool,
     pub server_name: &'a str,
+    pub username: &'a str,
     pub files: Vec<RenderedFile>, // arr?
 }
 #[derive(Template)]
@@ -48,7 +49,9 @@ pub struct LoginTemplate {
 
 #[derive(Template)]
 #[template(path = "register.html")]
-pub struct RegisterTemplate {}
+pub struct RegisterTemplate<'a> {
+    pub server_name: &'a str,
+}
 
 #[derive(Template)]
 #[template(path = "edit_file.html")]
