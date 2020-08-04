@@ -3,7 +3,7 @@ use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
 use actix_web::error as actix_error;
 use actix_web::middleware::{Logger, NormalizePath};
-use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use bcrypt;
 use env_logger;
 use env_logger::Env;
@@ -25,7 +25,7 @@ mod utils;
 
 use templates::*;
 
-static base_index: &[u8] = include_bytes!("baseIndex.gmi");
+static BASE_INDEX: &[u8] = include_bytes!("baseIndex.gmi");
 
 type DbConn = web::Data<Mutex<Connection>>;
 
@@ -125,7 +125,6 @@ impl RegisterForm {
 
 async fn register(
     id: Identity,
-    req: HttpRequest,
     conn: DbConn,
     form: web::Form<RegisterForm>,
     config: web::Data<Config>,
@@ -145,7 +144,7 @@ async fn register(
         VALUES (?1, ?2, ?3)
         "#,
     )?;
-    let res = stmt.execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass])?;
+    stmt.execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass])?;
 
     let user_id = conn.last_insert_rowid(); // maybe this works
 
@@ -156,14 +155,14 @@ async fn register(
         .join(filename); // TODO sanitize
     std::fs::create_dir_all(&full_path.parent().unwrap()).ok();
     let mut f = std::fs::File::create(&full_path)?;
-    f.write(&base_index);
+    f.write(&BASE_INDEX)?;
     let mut stmt = conn.prepare_cached(
         r#"
     INSERT INTO file (user_path, user_id, full_path)
     VALUES (?1, ?2, ?3)
     "#,
     )?;
-    let res = stmt.execute(&[filename, &user_id.to_string(), &full_path.to_str().unwrap()])?;
+    stmt.execute(&[filename, &user_id.to_string(), &full_path.to_str().unwrap()])?;
 
     id.remember(format!(
         "{} {}",
@@ -266,7 +265,7 @@ async fn edit_file_page(
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
-    let (user_id, username) = parse_identity(identity);
+    let (_, username) = parse_identity(identity);
     let filename = sanitize_filename::sanitize(local_path.as_str());
     let full_path = Path::new(&config.file_directory)
         .join(&username)
@@ -311,7 +310,7 @@ async fn edit_file(
         updated_at=strftime('%s', 'now')
     "#,
     )?;
-    let res = stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
+    stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
 
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
@@ -329,7 +328,7 @@ async fn upload_file(
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
-    let (user_id, username) = parse_identity(id.identity().unwrap()); // fail otheriwse
+    let (user_id, username) = parse_identity(identity); // fail otheriwse
     let conn = conn.lock().unwrap();
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
@@ -364,7 +363,7 @@ async fn upload_file(
         updated_at=strftime('%s', 'now')
         "#,
         )?;
-        let res = stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
+        stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
 
         // TODO work on security
     }
@@ -382,13 +381,13 @@ async fn delete_file(
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
-    let (user_id, username) = parse_identity(identity); // fail otheriwse
+    let (_, username) = parse_identity(identity); // fail otheriwse
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(path.as_str());
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename); // TODO sanitize
-    let f = web::block(move || {
+    web::block(move || {
         // create dirs if dne
         std::fs::remove_file(full_path)
     })
@@ -433,7 +432,7 @@ async fn serve_user_content(
     config: web::Data<Config>,
 ) -> Result<HttpResponse, Error> {
     let username = &path.0;
-    let mut filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
+    let filename = &sanitize_filename::sanitize(&path.1); // probably not necc but eh/
     let full_path = Path::new(&config.file_directory)
         .join(&username)
         .join(filename);
@@ -463,7 +462,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
     HttpServer::new(move || {
         let config_str = std::fs::read_to_string(&config_path).unwrap();
         let config: Config = toml::from_str(&config_str).unwrap();
-        let conn = Mutex::new(Connection::open("app.db").unwrap()); // TODO config, error?
+        let conn = Mutex::new(Connection::open(&config.db_path).unwrap()); // TODO config, error?
         App::new()
             .wrap(Logger::default())
             .wrap(NormalizePath)

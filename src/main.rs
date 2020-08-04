@@ -42,5 +42,6 @@ fn main() {
     match arg.sub {
         Sub::RunServer(r) => run_server(r.config),
         _ => Ok(()),
-    };
+    }
+    .ok();
 }

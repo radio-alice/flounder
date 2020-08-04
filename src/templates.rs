@@ -1,4 +1,4 @@
-use actix_web::{error::ErrorInternalServerError, Error, HttpResponse};
+use actix_web::{error::ErrorInternalServerError, HttpResponse};
 use askama::*;
 use bytes::BytesMut;
 

@@ -1,4 +1,4 @@
-use actix_web::{web, App, Error, HttpResponse, HttpServer, ResponseError};
+use actix_web::{Error, HttpResponse, ResponseError};
 use derive_more::Display; // naming it clearly for illustration purposes
 
 #[derive(Debug, Display)]
@@ -11,32 +11,32 @@ pub enum FlounderError {
 impl ResponseError for FlounderError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            UnauthorizedError => HttpResponse::Forbidden().finish(),
+            FlounderError::UnauthorizedError => HttpResponse::Forbidden().finish(),
             _ => HttpResponse::InternalServerError().finish(),
         }
     }
 }
 
 impl From<rusqlite::Error> for FlounderError {
-    fn from(err: rusqlite::Error) -> FlounderError {
+    fn from(_: rusqlite::Error) -> FlounderError {
         FlounderError::MiscError
     }
 }
 
 impl From<Error> for FlounderError {
-    fn from(err: Error) -> FlounderError {
+    fn from(_: Error) -> FlounderError {
         FlounderError::MiscError
     }
 }
 
 impl From<std::io::Error> for FlounderError {
-    fn from(err: std::io::Error) -> FlounderError {
+    fn from(_: std::io::Error) -> FlounderError {
         FlounderError::MiscError
     }
 }
 
 impl From<actix_multipart::MultipartError> for FlounderError {
-    fn from(err: actix_multipart::MultipartError) -> FlounderError {
+    fn from(_: actix_multipart::MultipartError) -> FlounderError {
         FlounderError::MiscError
     }
 }
