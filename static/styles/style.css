@@ -9,6 +9,9 @@ main{
   display: inline;
 }
 
+img {
+  max-width: 100%;
+}
 .button {
 background-color: white; /* Green */
 border: 1px solid black;
