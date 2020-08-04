@@ -6,7 +6,6 @@ use flounder::run_server;
 struct Arguments {
     #[argh(subcommand)]
     sub: Sub,
-
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -30,18 +29,18 @@ struct Admin {
 #[argh(subcommand, name = "run")]
 struct RunServer {
     /// config file path
-    #[argh(option, short='c', default="default_config()")]
+    #[argh(option, short = 'c', default = "default_config()")]
     config: String,
 }
 
 fn default_config() -> String {
-    return "flounder.toml".to_string()
+    return "flounder.toml".to_string();
 }
 /// Command line entrypoint
 fn main() {
     let arg: Arguments = argh::from_env();
     match arg.sub {
         Sub::RunServer(r) => run_server(r.config),
-        _ => Ok(())
+        _ => Ok(()),
     };
 }

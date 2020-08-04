@@ -12,11 +12,10 @@ impl ResponseError for FlounderError {
     fn error_response(&self) -> HttpResponse {
         match self {
             UnauthorizedError => HttpResponse::Forbidden().finish(),
-            _ => HttpResponse::InternalServerError().finish()
-            }
+            _ => HttpResponse::InternalServerError().finish(),
         }
     }
-
+}
 
 impl From<rusqlite::Error> for FlounderError {
     fn from(err: rusqlite::Error) -> FlounderError {
@@ -24,19 +23,19 @@ impl From<rusqlite::Error> for FlounderError {
     }
 }
 
-impl From<Error> for FlounderError { 
+impl From<Error> for FlounderError {
     fn from(err: Error) -> FlounderError {
         FlounderError::MiscError
     }
 }
 
-impl From<std::io::Error> for FlounderError { 
+impl From<std::io::Error> for FlounderError {
     fn from(err: std::io::Error) -> FlounderError {
         FlounderError::MiscError
     }
 }
 
-impl From<actix_multipart::MultipartError> for FlounderError { 
+impl From<actix_multipart::MultipartError> for FlounderError {
     fn from(err: actix_multipart::MultipartError) -> FlounderError {
         FlounderError::MiscError
     }
