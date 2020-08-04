@@ -17,7 +17,7 @@ bytes = "0.5.6"
 derive_more = "*"
 env_logger = "0.7.1"
 futures = "0.3.5"
-gmi2html = {version="0.1.4", git="https://github.com/alexwennerberg/gmi2html"}
+gmi2html = {version="0.1.5", git="https://github.com/alexwennerberg/gmi2html"}
 rusqlite = "0.23.1"
 sanitize-filename = "0.2.1" # TODO audit
 serde = {version="1.0", features=["derive"]}
