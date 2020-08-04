@@ -3,4 +3,5 @@ file_directory = "tmp"
 tls_enabled = false
 server_name = "flounder.local:5000"
 serve_all_content = true
+static_path = "static"
 proxy_url = "https://portal.mozz.us/gemini/"

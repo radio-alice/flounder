@@ -36,6 +36,9 @@ struct Config {
     tls_enabled: bool,
     server_name: String,
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
+    // Not ready for open registration yet -- use this 
+    secret_key: String,
+    static_path: String,
     proxy_url: String,
 }
 
@@ -99,9 +102,9 @@ struct RegisterForm {
 }
 
 impl RegisterForm {
-    fn validate(&self) -> bool {
+    fn validate(&self, secret_key: &str) -> bool {
         // username must be letters numbers hyphens
-        if !(self.secret == "flounderfan69") {
+        if !(self.secret == secret_key) {
             // for debug
             return false;
         }
@@ -130,7 +133,7 @@ async fn register(
     config: web::Data<Config>,
 ) -> Result<HttpResponse, FlounderError> {
     // validate
-    if !form.validate() {
+    if !form.validate(&config.secret_key) {
         // flash errors
         return Ok(HttpResponse::Found()
             .header("Location", "/register")
@@ -151,7 +154,7 @@ async fn register(
     // todo dont repeat;
     let filename = "index.gmi";
     let full_path = Path::new(&config.file_directory)
-        .join(&form.username)
+        .join(&form.username.to_lowercase())
         .join(filename); // TODO sanitize
     std::fs::create_dir_all(&full_path.parent().unwrap()).ok();
     let mut f = std::fs::File::create(&full_path)?;
@@ -474,11 +477,11 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
                     .secure(false),
             ))
             .data(conn)
+            .service(fs::Files::new("/static", &config.static_path).show_files_listing()) // TODO configurable
             .data(config)
             .app_data(web::PayloadConfig::new(32000))
             .route("/", web::get().to(index))
             // TODO -- setup to use nginx in production
-            .service(fs::Files::new("/static", "./static").show_files_listing()) // TODO configurable
             .route("/my_site", web::get().to(my_site))
             .route("/login", web::post().to(login)) // TODO consolidate
             .route("/login", web::get().to(login_page))
