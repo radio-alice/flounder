@@ -2,7 +2,7 @@
 ## About
 Flounder is an ultra-lightweight platform for making and sharing small websites. It consists of two components: the "my site" page, where you can edit your pages and upload small files, and the home page, where you can see other users' pages. Flounder is bare-bones simple. If you're looking for a place to start, maybe create a journal.gmi file where you can blog your thoughts. Any time you update it, it'll be pushed to the top of the home page.
 
-You can get started by editing this page -- remove this content and replace it with whatever you like! It will be live at <your-name>.flounder.online
+You can get started by editing this page -- remove this content and replace it with whatever you like! It will be live at <your-name>.flounder.online. You can go there right now to see what this page currently looks like.
 
 ## Links
 You can link to other sites using the following syntax:
@@ -19,15 +19,6 @@ The apparition of these faces in the crowd;
 Petals on a wet, black bough.
 ```
 
-You can use this to create text-based art, like so:
-
-``` piano
-║█║█║║█║█║█║║█║█║║█║█║█
-║█║█║║█║█║█║║█║█║║█║█║█
-║║║║║║║║║║║║║║║║║║║║║║║
-╚╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩╩
-```
-
 Lists look like this:
 * I
 * Love
@@ -38,6 +29,6 @@ And quotes look like this:
 - Friedrich Nietzsche
 
 For more detailed information, check out the full Gemini text guide:
-=> https://proxy.vulpes.one/gemini/gemini.circumlunar.space/docs/gemtext.gmi
+=> https://proxy.vulpes.one/gemini/gemini.circumlunar.space/docs/gemtext.gmi Gemini Text Guide
 
 Have fun!
