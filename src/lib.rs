@@ -2,6 +2,7 @@ use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
 use actix_web::error as actix_error;
+use actix_web::FromRequest;
 use actix_web::middleware::{Logger, NormalizePath};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use bcrypt;
@@ -508,9 +509,9 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
                     .secure(false),
             ))
             .data(conn)
+            .app_data(web::Form::<EditFileForm>::configure(|cfg| cfg.limit(32*1024)))
             .service(fs::Files::new("/static", &config.static_path).show_files_listing()) // TODO configurable
             .data(config)
-            .app_data(web::PayloadConfig::new(32000)) // doesnt work
             .route("/", web::get().to(index))
             // TODO -- setup to use nginx in production
             .route("/my_site", web::get().to(my_site))
