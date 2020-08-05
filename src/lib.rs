@@ -193,6 +193,17 @@ async fn index(
     let conn = conn.lock().unwrap(); // TODO
     let mut stmt = conn.prepare_cached(
         r#"
+        SELECT user.username from user;
+        "#
+        )?;
+    let mut usernames = vec![];
+    let mut users_res = stmt.query(NO_PARAMS)?;
+    while let Some(row) = users_res.next()? {
+        usernames.push(row.get(0)?);
+    }
+
+    let mut stmt = conn.prepare_cached(
+        r#"
         SELECT user.username, file.user_path, file.updated_at 
         FROM file 
         JOIN user
@@ -200,7 +211,7 @@ async fn index(
         ORDER BY file.updated_at DESC
         LIMIT 100"#,
     )?;
-    let res = stmt.query_map(NO_PARAMS, |row| {
+    let files_res = stmt.query_map(NO_PARAMS, |row| {
         Ok(RenderedFile {
             username: row.get(0)?,
             user_path: row.get(1)?,
@@ -210,7 +221,8 @@ async fn index(
     let template = IndexTemplate {
         logged_in: id.identity().is_some(),
         server_name: &config.server_name,
-        files: res.map(|a| a.unwrap()).collect(),
+        files: files_res.map(|a| a.unwrap()).collect(),
+        users: usernames,
     };
     template.into_response()
 }

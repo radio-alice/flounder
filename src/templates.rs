@@ -25,6 +25,7 @@ pub struct IndexTemplate<'a> {
     pub logged_in: bool,
     pub server_name: &'a str,
     pub files: Vec<RenderedFile>, // arr?
+    pub users: Vec<String>,
 }
 
 pub struct RenderedFile {
