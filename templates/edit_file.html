@@ -1,7 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+<script>function addText() {
+      var date = new Date();
+      document.getElementById("editor").value += date.toISOString() + "\t" + document.getElementById("new-status").value + "\n";
+      let value = document.getElementById("editor").value;
+      editor.setValue(value);
+}</script>
 <h2>Editing {{filename}}</h2>
-
+{% if filename == "twtxt.txt" %}
+<textarea id="new-status" placeholder="status text" maxlength="140" cols="70" rows="2"></textarea><br>
+<button onclick="addText()" class="button" id="create_new">Append status</button><br>
+{% endif %}
 <form id="edit-form" action="/edit/{{filename}}" method="POST">
   <textarea rows="20" name="file_text" id="editor">{{file_text}}</textarea>
   <br>

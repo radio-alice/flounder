@@ -19,7 +19,9 @@ use std::path::Path;
 use std::str;
 use std::sync::Mutex;
 use utils::*;
+use crate::twtxt::TwtxtStatus;
 
+mod twtxt;
 mod error;
 mod templates;
 mod utils;
@@ -485,6 +487,41 @@ async fn serve_user_content(
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
 }
 
+async fn show_statuses(
+    id: Identity,
+    conn: DbConn,
+    config: web::Data<Config>,
+    ) -> Result<HttpResponse, FlounderError> {
+    let conn = conn.lock().unwrap(); 
+    let mut stmt = conn.prepare_cached(r#"
+    SELECT full_path, username FROM file
+    JOIN user 
+    ON file.user_id = user.id
+    WHERE user_path = 'twtxt.txt'"#)?;
+
+    let mut statuses: Vec<TwtxtStatus> = vec![];
+    let mut res = stmt.query(NO_PARAMS)?;
+    while let Some(row) = res.next()? {
+        let full_path: String = row.get(0).unwrap();
+        let status_data = std::fs::read_to_string(full_path).unwrap();
+        for line in status_data.lines() {
+            let new_status = TwtxtStatus::new(row.get(1).unwrap(), line.to_string());
+            if new_status.is_some() {
+                statuses.push(new_status.unwrap());
+            }
+        }
+    }
+    statuses.sort_unstable_by_key(|a| a.date);
+    statuses.reverse();
+    // get all statuses push to vec
+    // sort statuses by date
+    let template = StatusesTemplate {
+        logged_in: id.identity().is_some(),
+        statuses: statuses,
+        server_name: &config.server_name,
+    };
+    template.into_response()
+}
 // https://actix.rs/docs/extractors/
 // run gemini server in separate thread
 #[actix_rt::main]
@@ -520,6 +557,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .route("/logout", web::get().to(logout)) // TODO should be post
             .route("/register", web::post().to(register))
             .route("/register", web::get().to(register_page))
+            .route("/statuses", web::get().to(show_statuses))
             .route("/upload", web::post().to(upload_file))
             .route(
                 "/user/{username}/{user_file_path}",

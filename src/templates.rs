@@ -3,6 +3,7 @@ use askama::*;
 use bytes::BytesMut;
 
 use crate::error::FlounderError;
+use crate::twtxt::TwtxtStatus;
 
 pub trait TemplateIntoResponse {
     fn into_response(&self) -> ::std::result::Result<HttpResponse, FlounderError>;
@@ -73,4 +74,12 @@ pub struct GmiPageTemplate {
 #[template(path = "error.html")]
 pub struct ErrorTemplate {
     pub error: String,
+}
+
+#[derive(Template)]
+#[template(path = "statuses.html")]
+pub struct StatusesTemplate<'a> {
+    pub logged_in: bool,
+    pub statuses: Vec<TwtxtStatus>,
+    pub server_name: &'a str,
 }

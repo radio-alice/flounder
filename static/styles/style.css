@@ -3,6 +3,7 @@ main{
   padding:2ch;
   margin:auto;
   font-family: Helvetica, Arial, monospace;
+  word-wrap: break-word;
 }
 
 .inline {
