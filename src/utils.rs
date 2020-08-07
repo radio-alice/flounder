@@ -1,7 +1,7 @@
 use std::path::Path;
 use std::time::SystemTime;
 
-static ALLOWED_EXTENSIONS: &[&'static str] = &["gmi", "txt", "jpg", "jpeg", "gif", "png", "webp", "midi", "json", "csv", "gemini", "mp3"];
+static ALLOWED_EXTENSIONS: &[&'static str] = &["gmi", "txt", "jpg", "jpeg", "gif", "png", "svg", "webp", "midi", "json", "csv", "gemini", "mp3"];
 
 pub fn ok_extension(filename: &str) -> bool {
     let tmp = filename.to_lowercase();
