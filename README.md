@@ -6,12 +6,8 @@ I'm really interested in the ideas behind [Tildeverse](https://tildeverse.org/) 
 
 Maybe Future Feature Ideas:
 
-* Support [twtxt](https://github.com/buckket/twtxt)
-* Support [Webmentions](https://indieweb.org/Webmention)? (seems unmaintained?)
-* Allow git repository hosting for Power Users
+* Support [Webmentions](https://indieweb.org/Webmention)? 
 
 ## Deployment
 
-Flounder accepts user-uploaded files and serves them. This requires a great deal of care! The built-in Actix server is NOT suitable for production. I use Nginx, and I (will) store a config in this repo.
-
-## Influences
+Flounder's ultimate goal is to be able to be easily self-hosted. If you're careful and know what you're doing, you could ry deploying it, but I haven't written any guides on how to do so yet. The Actix server is not secure as-is, I use Nginx to handle a lot of the proxying. I'll share resources when this is more stable.
