@@ -42,19 +42,19 @@ pub struct MySiteTemplate<'a> {
     pub server_name: &'a str,
     pub username: &'a str,
     pub files: Vec<RenderedFile>, // arr?
-    pub errors: Vec<String>
+    pub errors: Vec<String>,
 }
 #[derive(Template)]
 #[template(path = "login.html")]
 pub struct LoginTemplate<'a> {
-    pub errors: Vec<&'a str>
+    pub errors: Vec<&'a str>,
 }
 
 #[derive(Template)]
 #[template(path = "register.html")]
 pub struct RegisterTemplate<'a> {
     pub server_name: &'a str,
-    pub errors: Vec<&'a str>
+    pub errors: Vec<&'a str>,
 }
 
 #[derive(Template)]

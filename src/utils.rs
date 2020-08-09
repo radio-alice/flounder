@@ -1,13 +1,18 @@
 use std::path::Path;
 use std::time::SystemTime;
 
-static ALLOWED_EXTENSIONS: &[&'static str] = &["gmi", "txt", "jpg", "jpeg", "gif", "png", "svg", "webp", "midi", "json", "csv", "gemini", "mp3"];
+static ALLOWED_EXTENSIONS: &[&'static str] = &[
+    "gmi", "txt", "jpg", "jpeg", "gif", "png", "svg", "webp", "midi", "json", "csv", "gemini",
+    "mp3",
+];
 
 pub fn ok_extension(filename: &str) -> bool {
     let tmp = filename.to_lowercase();
     let lower_extension: Option<&str> = Path::new(&tmp).extension().and_then(|s| s.to_str());
-    return ALLOWED_EXTENSIONS.iter().any(|s| Some(*s) == lower_extension)
-    }
+    return ALLOWED_EXTENSIONS
+        .iter()
+        .any(|s| Some(*s) == lower_extension);
+}
 
 pub fn rendered_time_ago(epoch_time: u32) -> String {
     // do some fun stuff

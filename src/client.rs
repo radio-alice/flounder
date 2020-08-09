@@ -8,7 +8,7 @@ use url::Url;
 pub fn get_follow_redirect() {
     // TODO writeme
 }
-pub fn get_data(url: &str) -> Result<(Option<Vec<u8>>, Vec<u8>), String> {
+pub fn get_gmi_data(url: &str) -> Result<(Option<Vec<u8>>, Vec<u8>), String> {
     // TODO tls verification
     println!("{}", url);
     let url = Url::parse(url).unwrap(); // TODO error handling

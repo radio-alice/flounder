@@ -1,9 +1,10 @@
+use crate::twtxt::TwtxtStatus;
 use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
 use actix_web::error as actix_error;
-use actix_web::FromRequest;
 use actix_web::middleware::{Logger, NormalizePath};
+use actix_web::FromRequest;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use bcrypt;
 use env_logger;
@@ -19,11 +20,11 @@ use std::path::Path;
 use std::str;
 use std::sync::Mutex;
 use utils::*;
-use crate::twtxt::TwtxtStatus;
 
-mod twtxt;
+mod client;
 mod error;
 mod templates;
+mod twtxt;
 mod utils;
 
 use templates::*;
@@ -39,7 +40,7 @@ struct Config {
     tls_enabled: bool,
     server_name: String,
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
-    // Not ready for open registration yet -- use this 
+    // Not ready for open registration yet -- use this
     secret_key: String,
     static_path: String,
     proxy_url: String,
@@ -76,9 +77,11 @@ async fn login(
         "#,
     )?;
     // user does not exist etc
-    let (user_id, password_hash): (u32, String) = stmt.query_row(&[&form.username], |row| {
-        Ok((row.get(0).unwrap(), row.get(1).unwrap()))
-    }).unwrap_or((0, "notahash".to_string())); // TODO make less awk
+    let (user_id, password_hash): (u32, String) = stmt
+        .query_row(&[&form.username], |row| {
+            Ok((row.get(0).unwrap(), row.get(1).unwrap()))
+        })
+        .unwrap_or((0, "notahash".to_string())); // TODO make less awk
     if let Ok(true) = bcrypt::verify(&form.password, &password_hash) {
         // flash?
         id.remember(format!("{} {}", user_id.to_string(), form.username)); // awk
@@ -87,7 +90,9 @@ async fn login(
             .finish()) // TODO
     } else {
         // render login page w errors
-        let template = LoginTemplate{errors: vec!["Invalid username or password!"]};
+        let template = LoginTemplate {
+            errors: vec!["Invalid username or password!"],
+        };
         return template.into_response();
     }
 }
@@ -109,7 +114,11 @@ struct RegisterForm {
 impl RegisterForm {
     fn get_errors(&self, secret_key: &str) -> Vec<&str> {
         let mut errors = vec![];
-        if self.username.len() > 32 || self.username == "" || &self.username.to_lowercase() == "www" || &self.username.to_lowercase() == "proxy" {
+        if self.username.len() > 32
+            || self.username == ""
+            || &self.username.to_lowercase() == "www"
+            || &self.username.to_lowercase() == "proxy"
+        {
             errors.push("Invalid username")
         }
         if !(self.secret == secret_key) {
@@ -130,7 +139,7 @@ impl RegisterForm {
         if self.password.len() < 6 {
             errors.push("Please use a password at least 6 characters long. Preferably longer.");
         }
-        if self.password != self.password2{
+        if self.password != self.password2 {
             errors.push("Passwords do not match");
         }
         return errors;
@@ -146,7 +155,11 @@ async fn register(
     // validate
     let errors = form.get_errors(&config.secret_key);
     if errors.len() > 0 {
-        return RegisterTemplate {errors: errors, server_name: &config.server_name}.into_response();
+        return RegisterTemplate {
+            errors: errors,
+            server_name: &config.server_name,
+        }
+        .into_response();
     }
     let hashed_pass = bcrypt::hash(&form.password, bcrypt::DEFAULT_COST).unwrap();
     let conn = conn.lock().unwrap();
@@ -158,7 +171,13 @@ async fn register(
     )?;
     match stmt.execute(&[&form.username.to_lowercase(), &form.email, &hashed_pass]) {
         Ok(_) => (),
-        Err(_) => return RegisterTemplate {errors: vec!["Username or email already taken"], server_name: &config.server_name}.into_response()
+        Err(_) => {
+            return RegisterTemplate {
+                errors: vec!["Username or email already taken"],
+                server_name: &config.server_name,
+            }
+            .into_response()
+        }
     }
 
     let user_id = conn.last_insert_rowid(); // maybe this works
@@ -185,7 +204,9 @@ async fn register(
         form.username.to_lowercase()
     )); // awk
         // redirect to my site
-    Ok(HttpResponse::Found().header("Location", "/edit/index.gmi").finish())
+    Ok(HttpResponse::Found()
+        .header("Location", "/edit/index.gmi")
+        .finish())
 }
 
 async fn index(
@@ -197,8 +218,8 @@ async fn index(
     let mut stmt = conn.prepare_cached(
         r#"
         SELECT user.username from user;
-        "#
-        )?;
+        "#,
+    )?;
     let mut usernames = vec![];
     let mut users_res = stmt.query(NO_PARAMS)?;
     while let Some(row) = users_res.next()? {
@@ -231,11 +252,15 @@ async fn index(
 }
 
 async fn register_page(config: web::Data<Config>) -> Result<HttpResponse, FlounderError> {
-    RegisterTemplate {errors: vec![], server_name: &config.server_name}.into_response()
+    RegisterTemplate {
+        errors: vec![],
+        server_name: &config.server_name,
+    }
+    .into_response()
 }
 
 async fn login_page() -> Result<HttpResponse, FlounderError> {
-    LoginTemplate {errors: vec![]}.into_response()
+    LoginTemplate { errors: vec![] }.into_response()
 }
 
 async fn my_site(
@@ -309,7 +334,14 @@ async fn edit_file_page(
 
 // return error strs
 // this function is weird because i'm bad at rust
-fn upsert_file(data: &[u8], conn: &DbConn, username: &str, user_id: &str, local_path: &str, file_directory: &str) -> Result<Vec<String>, FlounderError>{
+fn upsert_file(
+    data: &[u8],
+    conn: &DbConn,
+    username: &str,
+    user_id: &str,
+    local_path: &str,
+    file_directory: &str,
+) -> Result<Vec<String>, FlounderError> {
     let mut errors = vec![];
     let conn = conn.lock().unwrap();
     let filename = &sanitize_filename::sanitize(local_path);
@@ -317,15 +349,13 @@ fn upsert_file(data: &[u8], conn: &DbConn, username: &str, user_id: &str, local_
     if !ok_extension(filename) {
         errors.push("Invalid file extension".to_owned());
     }
-    let full_path = Path::new(&file_directory)
-        .join(&username)
-        .join(filename);
+    let full_path = Path::new(&file_directory).join(&username).join(filename);
     std::fs::create_dir_all(full_path.parent().unwrap()).ok();
     if errors.len() > 0 {
         return Ok(errors);
     }
     let mut stmt = conn.prepare_cached(
-    r#"
+        r#"
     INSERT INTO file (user_path, user_id, full_path)
     VALUES (?1, ?2, ?3)
     ON CONFLICT(full_path) DO UPDATE SET
@@ -356,7 +386,14 @@ async fn edit_file(
         .ok_or(error::FlounderError::UnauthorizedError)?;
     let file_directory: String = config.file_directory.clone();
     let (user_id, username) = parse_identity(identity);
-    let errors = upsert_file(form.file_text.as_bytes(), &conn, &username, &user_id, local_path.as_str(), &file_directory)?;
+    let errors = upsert_file(
+        form.file_text.as_bytes(),
+        &conn,
+        &username,
+        &user_id,
+        local_path.as_str(),
+        &file_directory,
+    )?;
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
         .finish()) // TODO g
@@ -383,7 +420,14 @@ async fn upload_file(
             let data = chunk?;
             all_data.extend(data);
         }
-        let errors = upsert_file(&all_data, &conn, &username, &user_id, filename, &file_directory)?;
+        let errors = upsert_file(
+            &all_data,
+            &conn,
+            &username,
+            &user_id,
+            filename,
+            &file_directory,
+        )?;
         // TODO error handling
     }
     Ok(HttpResponse::Found()
@@ -456,7 +500,7 @@ async fn serve_user_content(
         || full_path.extension() == Some(OsStr::new("gemini"))
     {
         let gmi_file = std::fs::read_to_string(full_path).unwrap();
-        if r.query_string() =="raw=1" {
+        if r.query_string() == "raw=1" {
             return Ok(HttpResponse::from(gmi_file));
         }
         let string = gmi2html::GeminiConverter::new(&gmi_file)
@@ -469,21 +513,23 @@ async fn serve_user_content(
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
 }
 
-async fn proxy() {
-// TODO
+async fn proxy(url: web::Path<String>) {
+    client::get_gmi_data(&url);
 }
 
 async fn show_statuses(
     id: Identity,
     conn: DbConn,
     config: web::Data<Config>,
-    ) -> Result<HttpResponse, FlounderError> {
-    let conn = conn.lock().unwrap(); 
-    let mut stmt = conn.prepare_cached(r#"
+) -> Result<HttpResponse, FlounderError> {
+    let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached(
+        r#"
     SELECT full_path, username FROM file
     JOIN user 
     ON file.user_id = user.id
-    WHERE user_path = 'twtxt.txt'"#)?;
+    WHERE user_path = 'twtxt.txt'"#,
+    )?;
 
     let mut statuses: Vec<TwtxtStatus> = vec![];
     let mut res = stmt.query(NO_PARAMS)?;
@@ -532,7 +578,9 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
                     .secure(false),
             ))
             .data(conn)
-            .app_data(web::Form::<EditFileForm>::configure(|cfg| cfg.limit(32*1024)))
+            .app_data(web::Form::<EditFileForm>::configure(|cfg| {
+                cfg.limit(32 * 1024)
+            }))
             .service(fs::Files::new("/static", &config.static_path).show_files_listing()) // TODO configurable
             .data(config)
             .route("/", web::get().to(index))

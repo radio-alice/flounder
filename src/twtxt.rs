@@ -1,6 +1,5 @@
 /// see https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html
-use chrono::{NaiveDateTime, DateTime};
-
+use chrono::{DateTime, NaiveDateTime};
 
 pub struct TwtxtStatus {
     pub date: NaiveDateTime,
@@ -17,15 +16,14 @@ impl TwtxtStatus {
         }
         let mut text = result[1].to_string();
         text.truncate(140);
-        if let Ok(datetime)  = DateTime::parse_from_rfc3339(result[0]) {
+        if let Ok(datetime) = DateTime::parse_from_rfc3339(result[0]) {
             return Some(Self {
                 date: datetime.naive_utc(),
                 username: username.to_string(),
                 text: text,
-            })
-        }
-        else {
-            return None
+            });
+        } else {
+            return None;
         }
     }
 }
@@ -37,7 +35,11 @@ mod tests {
 
     #[test]
     fn test_parse_status() {
-        let new_status = TwtxtStatus::new("guy", "1996-12-19T16:39:57-08:00\they whats up").unwrap();
+        let new_status = TwtxtStatus::new(
+            "guy".to_owned(),
+            "1996-12-19T16:39:57-08:00\they whats up".to_owned(),
+        )
+        .unwrap();
         assert_eq!(&new_status.username, "guy");
         assert_eq!(&new_status.text, "hey whats up");
     }
