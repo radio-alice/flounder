@@ -109,7 +109,7 @@ struct RegisterForm {
 impl RegisterForm {
     fn get_errors(&self, secret_key: &str) -> Vec<&str> {
         let mut errors = vec![];
-        if self.username.len() > 32 || self.username == "" || &self.username.to_lowercase() == "www" {
+        if self.username.len() > 32 || self.username == "" || &self.username.to_lowercase() == "www" || &self.username.to_lowercase() == "proxy" {
             errors.push("Invalid username")
         }
         if !(self.secret == secret_key) {
@@ -307,6 +307,43 @@ async fn edit_file_page(
     return template.into_response();
 }
 
+// return error strs
+// this function is weird because i'm bad at rust
+fn upsert_file(data: &[u8], conn: &DbConn, username: &str, user_id: &str, local_path: &str, file_directory: &str) -> Result<Vec<String>, FlounderError>{
+    let mut errors = vec![];
+    let conn = conn.lock().unwrap();
+    let filename = &sanitize_filename::sanitize(local_path);
+    // validate
+    if !ok_extension(filename) {
+        errors.push("Invalid file extension".to_owned());
+    }
+    let full_path = Path::new(&file_directory)
+        .join(&username)
+        .join(filename);
+    std::fs::create_dir_all(full_path.parent().unwrap()).ok();
+    if errors.len() > 0 {
+        return Ok(errors);
+    }
+    let mut stmt = conn.prepare_cached(
+    r#"
+    INSERT INTO file (user_path, user_id, full_path)
+    VALUES (?1, ?2, ?3)
+    ON CONFLICT(full_path) DO UPDATE SET
+    updated_at=strftime('%s', 'now')
+    "#,
+    )?;
+    // TODO -- limit max files per user to configurable X (default 128)
+    let mut file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(&full_path)?;
+    file.write(data)?;
+    stmt.execute(&[filename, user_id, full_path.to_str().unwrap()])?;
+    Ok(vec![])
+}
+
 async fn edit_file(
     id: Identity,
     form: web::Form<EditFileForm>,
@@ -317,35 +354,9 @@ async fn edit_file(
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
+    let file_directory: String = config.file_directory.clone();
     let (user_id, username) = parse_identity(identity);
-    let conn = conn.lock().unwrap();
-    let filename = &sanitize_filename::sanitize(local_path.as_str());
-    if !ok_extension(filename) {
-        return Ok(HttpResponse::Found()
-            .header("Location", "/my_site")
-            .finish()) // TODO g
-    }
-    let full_path = Path::new(&config.file_directory)
-        .join(&username)
-        .join(filename);
-    std::fs::create_dir_all(full_path.parent().unwrap()).ok();
-    let mut file = std::fs::OpenOptions::new()
-        .read(true)
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .open(&full_path)?;
-    file.write(form.file_text.as_bytes())?;
-    let mut stmt = conn.prepare_cached(
-        r#"
-        INSERT INTO file (user_path, user_id, full_path)
-        VALUES (?1, ?2, ?3)
-        ON CONFLICT(full_path) DO UPDATE SET
-        updated_at=strftime('%s', 'now')
-    "#,
-    )?;
-    stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
-
+    let errors = upsert_file(form.file_text.as_bytes(), &conn, &username, &user_id, local_path.as_str(), &file_directory)?;
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
         .finish()) // TODO g
@@ -363,46 +374,17 @@ async fn upload_file(
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
     let (user_id, username) = parse_identity(identity); // fail otheriwse
-    let conn = conn.lock().unwrap();
+    let file_directory: String = config.file_directory.clone();
     while let Ok(Some(mut field)) = payload.try_next().await {
         let content_type = field.content_disposition().unwrap();
-        let filename = &sanitize_filename::sanitize(content_type.get_filename().unwrap());
-        if !ok_extension(filename) {
-            continue
-        }
-        let full_path = Path::new(&config.file_directory)
-            .join(&username)
-            .join(filename); // TODO sanitize
-                             // File::create is blocking operation, use threadpool
-        let mut f = web::block(move || {
-            // create dirs if dne
-            std::fs::create_dir_all(full_path.parent().unwrap()).ok();
-            std::fs::File::create(full_path)
-        })
-        .await
-        .unwrap();
-        let full_path = Path::new(&config.file_directory)
-            .join(&username)
-            .join(filename); // TODO sanitize
-                             // Field in turn is stream of *Bytes* object
+        let filename = content_type.get_filename().unwrap();
+        let mut all_data = vec![];
         while let Some(chunk) = field.next().await {
             let data = chunk?;
-            // filesystem operations are blocking, we have to use threadpool
-            f = web::block(move || f.write_all(&data).map(|_| f))
-                .await
-                .unwrap();
+            all_data.extend(data);
         }
-        let mut stmt = conn.prepare_cached(
-            r#"
-        INSERT INTO file (user_path, user_id, full_path)
-        VALUES (?1, ?2, ?3)
-        ON CONFLICT(full_path) DO UPDATE SET
-        updated_at=strftime('%s', 'now')
-        "#,
-        )?;
-        stmt.execute(&[filename, &user_id, full_path.to_str().unwrap()])?;
-
-        // TODO work on security
+        let errors = upsert_file(&all_data, &conn, &username, &user_id, filename, &file_directory)?;
+        // TODO error handling
     }
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
@@ -485,6 +467,10 @@ async fn serve_user_content(
         return Ok(template.into_response().unwrap());
     }
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
+}
+
+async fn proxy() {
+// TODO
 }
 
 async fn show_statuses(
