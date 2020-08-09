@@ -479,7 +479,10 @@ async fn serve_home(
         .proxy_url(&config.proxy_url)
         .inline_images(true)
         .to_html();
-    let template = GmiPageTemplate { html_block: string };
+    let template = GmiPageTemplate {
+        title: user.as_str(),
+        html_block: &string,
+    };
     return Ok(template.into_response().unwrap());
 }
 /// Rather than route through the gmi server, we write an
@@ -507,7 +510,9 @@ async fn serve_user_content(
             .proxy_url(&config.proxy_url)
             .inline_images(true)
             .to_html();
-        let template = GmiPageTemplate { html_block: string };
+        let template = GmiPageTemplate { 
+            title: filename,
+            html_block: &string };
         return Ok(template.into_response().unwrap());
     }
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error

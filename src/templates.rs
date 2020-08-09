@@ -66,8 +66,9 @@ pub struct EditFileTemplate {
 
 #[derive(Template)]
 #[template(path = "gmi_page.html")]
-pub struct GmiPageTemplate {
-    pub html_block: String,
+pub struct GmiPageTemplate<'a> {
+    pub title: &'a str,
+    pub html_block: &'a str,
 }
 
 #[derive(Template)]
