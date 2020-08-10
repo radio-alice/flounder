@@ -1,8 +1,10 @@
 /// see https://twtxt.readthedocs.io/en/latest/user/twtxtfile.html
 use chrono::{DateTime, NaiveDateTime};
+use crate::utils::rendered_time_ago;
 
 pub struct TwtxtStatus {
     pub date: NaiveDateTime,
+    pub time_ago: String,
     pub username: String,
     pub text: String, // TODO figure out str
 }
@@ -19,6 +21,7 @@ impl TwtxtStatus {
         if let Ok(datetime) = DateTime::parse_from_rfc3339(result[0]) {
             return Some(Self {
                 date: datetime.naive_utc(),
+                time_ago: rendered_time_ago(datetime.timestamp() as u32),
                 username: username.to_string(),
                 text: text,
             });

@@ -8,6 +8,6 @@
   <p>Write/update statuses on your <a href="/edit/twtxt.txt">twtxt</a> file.</p>
   {% endif %}
   {% for status in statuses %}
-  <a href="https://{{status.username}}.{{server_name}}"><b>{{status.username}}</b></a> <em>{{status.date}}</em> {{status.text}}<br>
+  <a href="https://{{status.username}}.{{server_name}}"><b>{{status.username}}</b></a> <em>{{status.time_ago}}:</em> "{{status.text}}"<br>
   {%endfor%}
 {% endblock %}
