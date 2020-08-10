@@ -348,13 +348,12 @@ fn upsert_file(
     )?;
     let count: u32 = stmt.query_row(&[user_id], |r| r.get(0))?;
     if count >= 128 {
-        // max files
-        return Ok(vec![]);
+        return Ok(vec!["You have the max number of files. Delete some to make room for more.".to_owned()]);
     }
     let filename = &sanitize_filename::sanitize(local_path);
     // validate
     if !ok_extension(filename) {
-        errors.push("Invalid file extension".to_owned());
+        errors.push("Invalid file extension.".to_owned());
     }
     let full_path = Path::new(&file_directory).join(&username).join(filename);
     std::fs::create_dir_all(full_path.parent().unwrap()).ok();
@@ -401,6 +400,10 @@ async fn edit_file(
         local_path.as_str(),
         &file_directory,
     )?;
+    if errors.len() > 0 {
+        // temporary
+        return Ok(HttpResponse::InternalServerError().body(format!("{:?}", errors)));
+    }
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
         .finish()) // TODO g
@@ -435,6 +438,11 @@ async fn upload_file(
             filename,
             &file_directory,
         )?;
+        if errors.len() > 0 {
+            // temporary
+            return Ok(HttpResponse::InternalServerError().body(format!("{:?}", errors)));
+        }
+
         // TODO error handling
     }
     Ok(HttpResponse::Found()
