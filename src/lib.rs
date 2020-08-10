@@ -109,7 +109,6 @@ struct RegisterForm {
     email: String,
     password: String,
     password2: String,
-    secret: String,
 }
 
 impl RegisterForm {
