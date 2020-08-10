@@ -2,6 +2,7 @@ use crate::twtxt::TwtxtStatus;
 use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
+use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::error as actix_error;
 use actix_web::middleware::{Logger, NormalizePath};
 use actix_web::FromRequest;
@@ -19,6 +20,7 @@ use std::io::Write;
 use std::path::Path;
 use std::str;
 use std::sync::Mutex;
+use std::time::Duration;
 use utils::*;
 
 mod client;
@@ -41,7 +43,6 @@ struct Config {
     server_name: String,
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
     // Not ready for open registration yet -- use this
-    secret_key: String,
     static_path: String,
     proxy_url: String,
 }
@@ -112,7 +113,7 @@ struct RegisterForm {
 }
 
 impl RegisterForm {
-    fn get_errors(&self, secret_key: &str) -> Vec<&str> {
+    fn get_errors(&self) -> Vec<&str> {
         let mut errors = vec![];
         if self.username.len() > 32
             || self.username == ""
@@ -120,10 +121,6 @@ impl RegisterForm {
             || &self.username.to_lowercase() == "proxy"
         {
             errors.push("Invalid username")
-        }
-        if !(self.secret == secret_key) {
-            // for debug
-            errors.push("Invalid secret key");
         }
         if !self
             .username
@@ -153,7 +150,7 @@ async fn register(
     config: web::Data<Config>,
 ) -> Result<HttpResponse, FlounderError> {
     // validate
-    let errors = form.get_errors(&config.secret_key);
+    let errors = form.get_errors();
     if errors.len() > 0 {
         return RegisterTemplate {
             errors: errors,
@@ -510,9 +507,10 @@ async fn serve_user_content(
             .proxy_url(&config.proxy_url)
             .inline_images(true)
             .to_html();
-        let template = GmiPageTemplate { 
+        let template = GmiPageTemplate {
             title: filename,
-            html_block: &string };
+            html_block: &string,
+        };
         return Ok(template.into_response().unwrap());
     }
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
@@ -571,6 +569,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
     HttpServer::new(move || {
         let config_str = std::fs::read_to_string(&config_path).unwrap();
         let config: Config = toml::from_str(&config_str).unwrap();
+        let store = MemoryStore::new(); // used for ratelimit
         let conn = Mutex::new(Connection::open(&config.db_path).unwrap()); // TODO config, error?
         App::new()
             .wrap(Logger::default())
@@ -591,10 +590,27 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .route("/", web::get().to(index))
             // TODO -- setup to use nginx in production
             .route("/my_site", web::get().to(my_site))
-            .route("/login", web::post().to(login)) // TODO consolidate
-            .route("/login", web::get().to(login_page))
+            .service(
+                web::resource("/login")
+                .route(web::post().to(login)) // TODO figure out how to just rate limit one of this
+                .route(web::get().to(login_page))
+                .wrap(
+                    RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
+                        .with_interval(Duration::from_secs(60))
+                        .with_max_requests(20),
+                ) // TODO consolidate
+            )
             .route("/logout", web::get().to(logout)) // TODO should be post
-            .route("/register", web::post().to(register))
+            .service(
+                web::resource("/register")
+                .route(web::post().to(register))
+                .route(web::get().to(register_page)) // TODO better rate limiting
+                .wrap(
+                    RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
+                        .with_interval(Duration::from_secs(86400))
+                        .with_max_requests(20),
+                )
+            )
             .route("/register", web::get().to(register_page))
             .route("/statuses", web::get().to(show_statuses))
             .route("/upload", web::post().to(upload_file))
