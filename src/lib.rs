@@ -340,6 +340,17 @@ fn upsert_file(
 ) -> Result<Vec<String>, FlounderError> {
     let mut errors = vec![];
     let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached(
+        r#"
+        SELECT COUNT(*) FROM file
+        where user_id = (?1)
+        "#,
+    )?;
+    let count: u32 = stmt.query_row(&[user_id], |r| r.get(0))?;
+    if count >= 128 {
+        // max files
+        return Ok(vec![]);
+    }
     let filename = &sanitize_filename::sanitize(local_path);
     // validate
     if !ok_extension(filename) {
@@ -591,24 +602,24 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .route("/my_site", web::get().to(my_site))
             .service(
                 web::resource("/login")
-                .route(web::post().to(login)) // TODO figure out how to just rate limit one of this
-                .route(web::get().to(login_page))
-                .wrap(
-                    RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
-                        .with_interval(Duration::from_secs(60))
-                        .with_max_requests(20),
-                ) // TODO consolidate
+                    .route(web::post().to(login)) // TODO figure out how to just rate limit one of this
+                    .route(web::get().to(login_page))
+                    .wrap(
+                        RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
+                            .with_interval(Duration::from_secs(60))
+                            .with_max_requests(20),
+                    ), //   DO consolidate
             )
             .route("/logout", web::get().to(logout)) // TODO should be post
             .service(
                 web::resource("/register")
-                .route(web::post().to(register))
-                .route(web::get().to(register_page)) // TODO better rate limiting
-                .wrap(
-                    RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
-                        .with_interval(Duration::from_secs(86400))
-                        .with_max_requests(20),
-                )
+                    .route(web::post().to(register))
+                    .route(web::get().to(register_page)) // TODO better rate limiting
+                    .wrap(
+                        RateLimiter::new(MemoryStoreActor::from(store.clone()).start())
+                            .with_interval(Duration::from_secs(86400))
+                            .with_max_requests(20),
+                    ),
             )
             .route("/register", web::get().to(register_page))
             .route("/statuses", web::get().to(show_statuses))
