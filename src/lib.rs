@@ -1,3 +1,5 @@
+use rand::prelude::*;
+use rand::seq::SliceRandom;
 use crate::twtxt::TwtxtStatus;
 use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
@@ -221,6 +223,8 @@ async fn index(
     while let Some(row) = users_res.next()? {
         usernames.push(row.get(0)?);
     }
+    let mut rng = rand::thread_rng();
+    usernames.shuffle(&mut rng);
 
     let mut stmt = conn.prepare_cached(
         r#"
@@ -229,7 +233,7 @@ async fn index(
         JOIN user
         ON file.user_id = user.id
         ORDER BY file.updated_at DESC
-        LIMIT 100"#,
+        LIMIT 64"#,
     )?;
     let files_res = stmt.query_map(NO_PARAMS, |row| {
         Ok(RenderedFile {
@@ -275,6 +279,7 @@ async fn my_site(
                 r#"
             SELECT file.user_path, file.updated_at
             FROM file where user_id = (?)
+            ORDER BY file.updated_at DESC
             "#,
             )
             .unwrap();
