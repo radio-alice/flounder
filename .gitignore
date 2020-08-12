@@ -3,3 +3,4 @@
 *.db
 tmp
 deploy.sh
+static/js/codemirror.js
