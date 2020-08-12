@@ -13,14 +13,15 @@ main{
 img {
   max-width: 100%;
 }
+
 .button {
 background-color: white; /* Green */
 border: 1px solid black;
-text-align: center;
 text-decoration: none;
 padding:2px 5px;
 display: inline-block;
-  transition-duration: 0.2s;
+margin: 0px;
+transition-duration: 0.2s;
 }
 
 .button:hover {

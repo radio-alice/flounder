@@ -279,7 +279,7 @@ async fn my_site(
                 r#"
             SELECT file.user_path, file.updated_at
             FROM file where user_id = (?)
-            ORDER BY file.updated_at DESC
+            ORDER BY user_path;
             "#,
             )
             .unwrap();
