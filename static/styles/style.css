@@ -16,11 +16,17 @@ img {
 
 #editor {
   width: 100%;
-    border:1px solid #999999;
-      width:100%;
-        margin:5px 0;
-          padding:3px;
-          resize: none;
+  border:1px solid #999999;
+  width:100%;
+  margin:5px 0;
+  padding:3px;
+  resize: none;
+}
+
+.status {
+  border: 1px solid black;
+  margin: 2px;
+  padding-left: .5ch;
 }
 
 .button {
