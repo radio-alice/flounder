@@ -327,8 +327,9 @@ async fn edit_file_page(
         .join(&filename); // TODO sanitize
     let file_text = std::fs::read_to_string(full_path).unwrap_or("".to_string());
     let template = EditFileTemplate {
-        filename: filename,
-        file_text: file_text,
+        filename: &filename,
+        server_name: &config.server_name,
+        file_text: &file_text,
     };
     return template.into_response();
 }

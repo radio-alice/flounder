@@ -2,9 +2,11 @@
 {% block content %}
 <script>function addText() {
       var date = new Date();
-      document.getElementById("editor").value += date.toISOString() + "\t" + document.getElementById("new-status").value + "\n";
-      let value = document.getElementById("editor").value;
-      editor.setValue(value);
+      var new_status = date.toISOString() + "\t" + document.getElementById("new-status").value + "\n";;
+      new_status = new_status.replace(/\@([a-z0-9]*)\b/i,"@<$1 https://$1.{{server_name}}/twtxt.txt>")
+      let editor = document.getElementById("editor");
+      editor.value += new_status
+      document.getElementById("new-status").value = "";
 }</script>
 <h2>Editing {{filename}}</h2>
 {% if filename == "twtxt.txt" %}

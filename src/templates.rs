@@ -59,9 +59,10 @@ pub struct RegisterTemplate<'a> {
 
 #[derive(Template)]
 #[template(path = "edit_file.html")]
-pub struct EditFileTemplate {
-    pub filename: String,
-    pub file_text: String,
+pub struct EditFileTemplate<'a> {
+    pub server_name: &'a str,
+    pub filename: &'a str,
+    pub file_text: &'a str,
 }
 
 #[derive(Template)]
