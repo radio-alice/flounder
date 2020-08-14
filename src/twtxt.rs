@@ -29,6 +29,11 @@ impl TwtxtStatus {
             return None;
         }
     }
+
+    pub fn text_to_html(&self) -> String {
+        // render hyperlinks
+        "".to_string()
+    }
 }
 
 #[cfg(test)]

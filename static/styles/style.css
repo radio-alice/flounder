@@ -29,6 +29,11 @@ img {
   padding-left: .5ch;
 }
 
+.status-text {
+  font-family: monospace;
+  padding: .5ch;
+}
+
 .button {
 background-color: white; /* Green */
 border: 1px solid black;

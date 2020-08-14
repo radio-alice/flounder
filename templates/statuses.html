@@ -10,6 +10,6 @@
   {% for status in statuses %}
   <div class="status">
   <a href="https://{{status.username}}.{{server_name}}"><b>{{status.username}}</b></a> <em>{{status.time_ago}}</em><br>
-  {{status.text}}<br></div>
+  <div class="status-text">{{status.text}}</div></div>
   {%endfor%}
 {% endblock %}
