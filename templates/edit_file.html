@@ -10,7 +10,7 @@
 }</script>
 <h2>Editing {{filename}}</h2>
 {% if filename == "twtxt.txt" %}
-<textarea id="new-status" placeholder="status text" maxlength="140" cols="70" rows="2"></textarea><br>
+<textarea id="new-status" placeholder="status text" maxlength="280" cols="70" rows="2"></textarea><br>
 <button onclick="addText()" class="button" id="create_new">Append status</button><br>
 {% endif %}
 <form id="edit-form" action="/edit/{{filename}}" method="POST">

@@ -10,14 +10,14 @@ pub struct TwtxtStatus {
 }
 
 impl TwtxtStatus {
-    /// Will truncate to 140 characters
+    /// Will truncate to 280 characters. Spec recommends 140 but that's too short IMO
     pub fn new(username: String, status_text: String) -> Option<Self> {
         let result: Vec<&str> = status_text.splitn(2, "\t").collect();
         if result.len() != 2 {
             return None;
         }
         let mut text = result[1].to_string();
-        text.truncate(140);
+        text.truncate(280);
         if let Ok(datetime) = DateTime::parse_from_rfc3339(result[0]) {
             return Some(Self {
                 date: datetime.naive_utc(),
