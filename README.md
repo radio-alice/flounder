@@ -1,6 +1,6 @@
 # Flounder!
 
-An ultra-lightweight Gemini web portal.
+An ultra-lightweight Gemini web portal. View online at https://flounder.online/
 
 I'm really interested in the ideas behind [Tildeverse](https://tildeverse.org/) and the [IndieWeb](https://indieweb.org/), and wanted to make an application that takes some of the ideas behind these communities and makes a radically simple and easy-to-use version of it. [Neocities](https://neocities.org/) was another big inspiration: giving users the power and transparency of directly editing HTML, while making the process accessible and easy to learn. Gemini is such a straightforward protocol that making a static website becomes even easier!
 
