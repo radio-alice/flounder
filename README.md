@@ -11,3 +11,11 @@ Maybe Future Feature Ideas:
 ## Deployment
 
 Flounder's ultimate goal is to be able to be easily self-hosted. If you're careful and know what you're doing, you could ry deploying it, but I haven't written any guides on how to do so yet. The Actix server is not secure as-is, I use Nginx to handle a lot of the proxying. I'll share resources when this is more stable.
+
+Here's a rough outline of things you'll need to configure your server to do:
+- xss protection in production
+- tls in production
+- block /user (this prevents xss. Images and especially svgs are attack vectors for xss)
+- proxy {user}.flounder.online to flounder.online/user/{user} with default path being index.gmi
+- proxy {user}.flounder.online/static/style.css to flounder.online/static/style.css
+- limit body to 32KB
