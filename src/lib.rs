@@ -1,5 +1,3 @@
-use rand::prelude::*;
-use rand::seq::SliceRandom;
 use crate::twtxt::TwtxtStatus;
 use actix_files as fs; // TODO optional
 use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
@@ -15,6 +13,8 @@ use env_logger::Env;
 use error::FlounderError;
 use futures::{StreamExt, TryStreamExt};
 use gmi2html;
+use rand::prelude::*;
+use rand::seq::SliceRandom;
 use rusqlite::{Connection, Result, NO_PARAMS};
 use serde::Deserialize;
 use std::ffi::OsStr;
@@ -75,7 +75,7 @@ async fn login(
     let conn = conn.lock().unwrap();
     let mut stmt = conn.prepare_cached(
         r#"
-        SELECT id, password_hash from user 
+        SELECT id, password_hash from user
         WHERE user.username = (?)
         "#,
     )?;
@@ -228,8 +228,8 @@ async fn index(
 
     let mut stmt = conn.prepare_cached(
         r#"
-        SELECT user.username, file.user_path, file.updated_at 
-        FROM file 
+        SELECT user.username, file.user_path, file.updated_at
+        FROM file
         JOIN user
         ON file.user_id = user.id
         ORDER BY file.updated_at DESC
@@ -310,6 +310,10 @@ async fn my_site(
 struct EditFileForm {
     file_text: String,
 }
+#[derive(Deserialize)]
+struct AppendStatusForm {
+    status_text: String,
+}
 
 async fn edit_file_page(
     id: Identity,
@@ -354,7 +358,9 @@ fn upsert_file(
     )?;
     let count: u32 = stmt.query_row(&[user_id], |r| r.get(0))?;
     if count >= 128 {
-        return Ok(vec!["You have the max number of files. Delete some to make room for more.".to_owned()]);
+        return Ok(vec![
+            "You have the max number of files. Delete some to make room for more.".to_owned(),
+        ]);
     }
     let filename = &sanitize_filename::sanitize(local_path);
     // validate
@@ -412,6 +418,39 @@ async fn edit_file(
     }
     Ok(HttpResponse::Found()
         .header("Location", "/my_site")
+        .finish()) // TODO g
+}
+
+async fn append_status(
+    id: Identity,
+    form: web::Form<AppendStatusForm>,
+    conn: DbConn,
+    config: web::Data<Config>,
+) -> Result<HttpResponse, FlounderError> {
+    let identity = id
+        .identity()
+        .ok_or(error::FlounderError::UnauthorizedError)?;
+    let (user_id, username) = parse_identity(identity);
+    let twtxt_path = Path::new(&config.file_directory)
+        .join(&username)
+        .join("twtxt.txt");
+    let old_twtxt = std::fs::read_to_string(twtxt_path).unwrap_or_else(|_| "".to_string());
+    let new_twtxt = old_twtxt + form.status_text.as_str();
+
+    let errors = upsert_file(
+        &new_twtxt.as_bytes(),
+        &conn,
+        &username,
+        &user_id,
+        "twtxt.txt",
+        &config.file_directory.clone(),
+    )?;
+    if !errors.is_empty() {
+        // temporary
+        return Ok(HttpResponse::InternalServerError().body(format!("{:?}", errors)));
+    }
+    Ok(HttpResponse::Found()
+        .header("Location", "/statuses")
         .finish()) // TODO g
 }
 
@@ -553,7 +592,7 @@ async fn show_statuses(
     let mut stmt = conn.prepare_cached(
         r#"
     SELECT full_path, username FROM file
-    JOIN user 
+    JOIN user
     ON file.user_id = user.id
     WHERE user_path = 'twtxt.txt'"#,
     )?;
@@ -637,6 +676,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             )
             .route("/register", web::get().to(register_page))
             .route("/statuses", web::get().to(show_statuses))
+            .route("/statuses/new", web::post().to(append_status))
             .route("/upload", web::post().to(upload_file))
             .route(
                 "/user/{username}/{user_file_path}",
