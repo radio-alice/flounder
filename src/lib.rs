@@ -427,13 +427,14 @@ async fn append_status(
     conn: DbConn,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, FlounderError> {
+    let twtxt_filename = "twtxt.txt";
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
     let (user_id, username) = parse_identity(identity);
     let twtxt_path = Path::new(&config.file_directory)
         .join(&username)
-        .join("twtxt.txt");
+        .join(twtxt_filename);
     let old_twtxt = std::fs::read_to_string(twtxt_path).unwrap_or_else(|_| "".to_string());
     let new_twtxt = old_twtxt + form.status_text.as_str();
 
@@ -442,7 +443,7 @@ async fn append_status(
         &conn,
         &username,
         &user_id,
-        "twtxt.txt",
+        twtxt_filename,
         &config.file_directory.clone(),
     )?;
     if !errors.is_empty() {
