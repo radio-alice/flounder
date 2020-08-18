@@ -2,7 +2,7 @@
 
 {% block content %}
 <script>
-  // todo: move this logic to backend? (so you can replace js with <form>)
+  // todo: move this logic to backend (so you can replace js with <form>)
   function postStatus() {
     var date = new Date()
     var new_status =
@@ -28,6 +28,7 @@
 </script>
 <h1>🐟Flounder: Statuses</h1>
 {% include "header.html" %}
+<h2>Recent status updates:</h2>
 {% if logged_in %}
   <textarea
     id="new-status"
@@ -39,13 +40,12 @@
   <br />
   <button onclick="postStatus()" class="button">Post new status</button>
 {% endif %}
-<h2>Recent status updates:</h2>
 {% for status in statuses %}
 <div class="status">
   <a href="https://{{status.username}}.{{server_name}}"><b>{{status.username}}</b></a> <em>{{status.time_ago}}</em><br>
   <div class="status-text">{{status.text}}</div></div>
 {%endfor%}
 {% if statuses.len() == 0 %}
-<p>you haven't posted any statuses yet!</p>
+<p>No one has posted any statuses yet!</p>
 {% endif %}
 {% endblock %}
