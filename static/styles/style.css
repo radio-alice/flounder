@@ -25,7 +25,8 @@ img {
 
 .status {
   border: 1px solid black;
-  margin: 3px;
+  margin-top: 3px;
+  margin-bottom: 3px;
   padding-left: .5ch;
 }
 
