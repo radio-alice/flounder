@@ -13,7 +13,6 @@ use env_logger::Env;
 use error::FlounderError;
 use futures::{StreamExt, TryStreamExt};
 use gmi2html;
-use rand::prelude::*;
 use rand::seq::SliceRandom;
 use rusqlite::{Connection, Result, NO_PARAMS};
 use serde::Deserialize;
@@ -25,7 +24,6 @@ use std::sync::Mutex;
 use std::time::Duration;
 use utils::*;
 
-mod client;
 mod error;
 mod templates;
 mod twtxt;
@@ -584,9 +582,9 @@ async fn serve_user_content(
     fs::NamedFile::open(full_path).unwrap().into_response(&r) // todo error
 }
 
-async fn proxy(url: web::Path<String>) {
-    client::get_gmi_data(&url);
-}
+// async fn proxy(url: web::Path<String>) {
+//     client::get_gmi_data(&url);
+// }
 
 async fn show_statuses(
     id: Identity,

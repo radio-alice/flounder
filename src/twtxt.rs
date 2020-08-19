@@ -30,10 +30,10 @@ impl TwtxtStatus {
         }
     }
 
-    pub fn text_to_html(&self) -> String {
+    // pub fn text_to_html(&self) -> String {
         // render hyperlinks
-        "".to_string()
-    }
+        // "".to_string()
+    // }
 }
 
 #[cfg(test)]
