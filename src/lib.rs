@@ -427,32 +427,36 @@ async fn append_status(
     conn: DbConn,
     config: web::Data<Config>,
 ) -> Result<HttpResponse, FlounderError> {
-    let twtxt_filename = "twtxt.txt";
     let identity = id
         .identity()
         .ok_or(error::FlounderError::UnauthorizedError)?;
     let (user_id, username) = parse_identity(identity);
+
     let twtxt_path = Path::new(&config.file_directory)
         .join(&username)
-        .join(twtxt_filename);
-    let old_twtxt = std::fs::read_to_string(twtxt_path).unwrap_or_else(|_| "".to_string());
-    let new_twtxt = old_twtxt + form.status_text.as_str();
+        .join("twtxt.txt");
+    let mut twtxt_file = std::fs::OpenOptions::new()
+        .append(true)
+        .create(true)
+        .open(&twtxt_path)?;
 
-    let errors = upsert_file(
-        &new_twtxt.as_bytes(),
-        &conn,
-        &username,
-        &user_id,
-        twtxt_filename,
-        &config.file_directory.clone(),
+    let conn = conn.lock().unwrap();
+    let mut stmt = conn.prepare_cached(
+        r#"
+    INSERT INTO file (user_path, user_id, full_path)
+    VALUES (?1, ?2, ?3)
+    ON CONFLICT(full_path) DO UPDATE SET
+    updated_at=strftime('%s', 'now')
+    "#,
     )?;
-    if !errors.is_empty() {
-        // temporary
-        return Ok(HttpResponse::InternalServerError().body(format!("{:?}", errors)));
+    stmt.execute(&["twtxt.txt", &user_id, twtxt_path.to_str().unwrap()])?;
+
+    match twtxt_file.write_all(form.status_text.as_bytes()) {
+        Ok(_) => Ok(HttpResponse::Found()
+            .header("Location", "/statuses")
+            .finish()), // TODO g
+        Err(e) => Ok(HttpResponse::InternalServerError().body(format!("{:?}", e))),
     }
-    Ok(HttpResponse::Found()
-        .header("Location", "/statuses")
-        .finish()) // TODO g
 }
 
 /// Overwrites existing files
