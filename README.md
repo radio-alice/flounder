@@ -17,7 +17,7 @@ To run the development server:
 ```
 cargo build .
 # Apply the schema
-sqlite3 < schema.sql
+sqlite3 < schema.sql flounder.db
 # Run development server
 ./target/debug/flounder run --config example_config.toml
 ```
