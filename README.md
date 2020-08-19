@@ -8,6 +8,20 @@ Maybe Future Feature Ideas:
 
 * Support [Webmentions](https://indieweb.org/Webmention)? 
 
+## Development
+
+Requires sqlite3 libraries
+
+To run the development server:
+
+```
+cargo build .
+# Apply the schema
+sqlite3 < schema.sql
+# Run development server
+./target/debug/flounder --config example_config.toml
+```
+
 ## Deployment
 
 Flounder's ultimate goal is to be able to be easily self-hosted. If you're careful and know what you're doing, you could ry deploying it, but I haven't written any guides on how to do so yet. The Actix server is not secure as-is, I use Nginx to handle a lot of the proxying. I'll share resources when this is more stable.
