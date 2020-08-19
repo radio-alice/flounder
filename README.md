@@ -19,7 +19,7 @@ cargo build .
 # Apply the schema
 sqlite3 < schema.sql
 # Run development server
-./target/debug/flounder --config example_config.toml
+./target/debug/flounder run --config example_config.toml
 ```
 
 ## Deployment
