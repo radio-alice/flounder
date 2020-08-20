@@ -133,10 +133,15 @@ pub fn gemtext_to_html(input_text: &str) -> String {
                 "" => first,
                 t => t,
             };
-            if is_image || is_audio {
+            if is_image {
                 output.push_str("\" alt=\"");
                 escape_html(&mut output, link_text);
                 output.push_str("\">");
+            } else if is_audio {
+                output.push_str("\" alt=\"");
+                escape_html(&mut output, link_text);
+                output.push_str("\">");
+                output.push_str("</audio>")
             } else {
                 output.push_str("\">");
                 escape_html(&mut output, link_text);
@@ -257,7 +262,7 @@ mod tests {
     fn test_replace_audio() {
         assert_eq!(
             gemtext_to_html("=> something.mp3 cool audio"),
-            "<audio controls src=\"something.mp3\" alt=\"cool audio\"><br>\n"
+            "<audio controls src=\"something.mp3\" alt=\"cool audio\"></audio><br>\n"
             )
     }
 }
