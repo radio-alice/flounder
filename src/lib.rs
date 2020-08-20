@@ -4,7 +4,7 @@ use actix_identity::{CookieIdentityPolicy, Identity, IdentityService};
 use actix_multipart::Multipart;
 use actix_ratelimit::{MemoryStore, MemoryStoreActor, RateLimiter};
 use actix_web::error as actix_error;
-use actix_web::middleware::{Logger, NormalizePath};
+use actix_web::middleware::Logger;
 use actix_web::FromRequest;
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer};
 use bcrypt;
@@ -12,7 +12,6 @@ use env_logger;
 use env_logger::Env;
 use error::FlounderError;
 use futures::{StreamExt, TryStreamExt};
-use gmi2html;
 use rand::seq::SliceRandom;
 use rusqlite::{Connection, Result, NO_PARAMS};
 use serde::Deserialize;
@@ -23,11 +22,14 @@ use std::str;
 use std::sync::Mutex;
 use std::time::Duration;
 use utils::*;
+use gemtext2html::gemtext_to_html;
 
+mod gemtext2html;
 mod error;
 mod templates;
 mod twtxt;
 mod utils;
+mod escape;
 
 use templates::*;
 
@@ -44,7 +46,6 @@ struct Config {
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
     // Not ready for open registration yet -- use this
     static_path: String,
-    proxy_url: String,
 }
 
 #[derive(Deserialize)]
@@ -534,10 +535,7 @@ async fn serve_home(
         .join(user.as_str())
         .join("index.gmi");
     let gmi_file = std::fs::read_to_string(full_path).unwrap();
-    let string = gmi2html::GeminiConverter::new(&gmi_file)
-        .proxy_url(&config.proxy_url)
-        .inline_images(true)
-        .to_html();
+    let string = gemtext_to_html(&gmi_file);
     let template = GmiPageTemplate {
         title: user.as_str(),
         html_block: &string,
@@ -565,10 +563,7 @@ async fn serve_user_content(
         if r.query_string() == "raw=1" {
             return Ok(HttpResponse::from(gmi_file));
         }
-        let string = gmi2html::GeminiConverter::new(&gmi_file)
-            .proxy_url(&config.proxy_url)
-            .inline_images(true)
-            .to_html();
+        let string = gemtext_to_html(&gmi_file);
         let template = GmiPageTemplate {
             title: filename,
             html_block: &string,
@@ -614,7 +609,7 @@ async fn show_statuses(
     // sort statuses by date
     let template = StatusesTemplate {
         logged_in: id.identity().is_some(),
-        statuses: statuses,
+        statuses,
         server_name: &config.server_name,
     };
     template.into_response()
@@ -635,7 +630,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
         let conn = Mutex::new(Connection::open(&config.db_path).unwrap()); // TODO config, error?
         App::new()
             .wrap(Logger::default())
-            .wrap(NormalizePath) // does this do anything
+            
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(&[0; 32])
                     // domain?

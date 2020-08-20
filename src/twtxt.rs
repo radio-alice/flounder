@@ -23,7 +23,7 @@ impl TwtxtStatus {
                 date: datetime.naive_utc(),
                 time_ago: rendered_time_ago(datetime.timestamp() as u32),
                 username: username.to_string(),
-                text: text,
+                text,
             });
         } else {
             return None;
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_invalid_status() {
-        let new_status = TwtxtStatus::new("guy", "1996-19T16:39:57-08:00\they whats up");
+        let new_status = TwtxtStatus::new("guy".to_owned(), "1996-19T16:39:57-08:00\they whats up".to_owned());
         assert!(new_status.is_none())
     }
 }
