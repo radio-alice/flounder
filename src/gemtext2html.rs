@@ -15,7 +15,7 @@ static INLINE_IMAGE_EXTENSIONS: &[&str] = &[".jpg", "jpeg", ".png", ".gif", ".ic
 
 // All 4 characters for efficiency
 // set to [] for none 
-static INLINE_AUDIO_EXTENSIONS: &[&str] = &[".mp3"];
+static INLINE_AUDIO_EXTENSIONS: &[&str] = &[".mp3", ".ogg"];
 
 static PROXY_URL: &str = "https://portal.mozz.us/gemini/";
 
