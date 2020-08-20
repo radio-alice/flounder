@@ -103,7 +103,7 @@ pub fn gemtext_to_html(input_text: &str) -> String {
                     output.push_str("<img src=\"");
                     is_image = true;
                 } else if INLINE_AUDIO_EXTENSIONS.contains(&extension) {
-                    output.push_str("<a href=\""); // TODO audio
+                    output.push_str("<audio controls src=\""); // TODO audio
                     is_audio = true;
                 } else {
                     output.push_str("<a href=\"");
@@ -133,14 +133,14 @@ pub fn gemtext_to_html(input_text: &str) -> String {
                 "" => first,
                 t => t,
             };
-            if !is_image {
-                output.push_str("\">");
-                escape_html(&mut output, link_text);
-                output.push_str("</a>");
-            } else {
+            if is_image || is_audio {
                 output.push_str("\" alt=\"");
                 escape_html(&mut output, link_text);
                 output.push_str("\">");
+            } else {
+                output.push_str("\">");
+                escape_html(&mut output, link_text);
+                output.push_str("</a>");
             }
             output.push_str("<br>\n");
         } else {
@@ -251,6 +251,13 @@ mod tests {
         assert_eq!(
             gemtext_to_html("=> something.jpg cool pic"),
             "<img src=\"something.jpg\" alt=\"cool pic\"><br>\n"
+            )
+    }
+    #[test]
+    fn test_replace_audio() {
+        assert_eq!(
+            gemtext_to_html("=> something.mp3 cool audio"),
+            "<audio controls src=\"something.mp3\" alt=\"cool audio\"><br>\n"
             )
     }
 }
