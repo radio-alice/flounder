@@ -14,6 +14,7 @@ pub fn ok_extension(filename: &str) -> bool {
         .any(|s| Some(*s) == lower_extension);
 }
 
+// Probably could use a library here. Pointless optimization
 pub fn rendered_time_ago(epoch_time: u32) -> String {
     // do some fun stuff
     let now = SystemTime::now()
@@ -23,12 +24,32 @@ pub fn rendered_time_ago(epoch_time: u32) -> String {
     let ago = now - epoch_time as u64;
 
     if ago < 60 {
-        return format!("{} seconds ago", ago);
+        if ago == 1 {
+            return "1 second ago".to_string();
+        }
+        else {
+            return format!("{} seconds ago", ago);
+        }
     } else if ago < 3600 {
-        return format!("{} minutes ago", ago / 60);
+        let minutes = ago / 60;
+        if minutes == 1 {
+            return "1 minute ago".to_string()
+        } else {
+            return format!("{} minutes ago", minutes);
+        }
     } else if ago < 3600 * 24 {
-        return format!("{} hours ago", ago / 3600);
+        let hours = ago / 3600;
+        if hours == 1 {
+            return "1 hour ago".to_string()
+        } else{
+            return format!("{} hours ago", hours);
+        }
     } else {
-        return format!("{} days ago", ago / (3600 * 24));
+        let days = 3600 * 24;
+        if days == 1 {
+            return "1 day ago".to_string()
+        } else {
+            return format!("{} days ago", ago / days);
+        }
     }
 }
