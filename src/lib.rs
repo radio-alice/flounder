@@ -46,6 +46,7 @@ struct Config {
     serve_all_content: bool, // Don't use nginx for anything. In production probably we wanna use nginx for static files
     // Not ready for open registration yet -- use this
     static_path: String,
+    secret_key: String,
 }
 
 #[derive(Deserialize)]
@@ -636,7 +637,7 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             .wrap(Logger::default())
             
             .wrap(IdentityService::new(
-                CookieIdentityPolicy::new(&[0; 32])
+                CookieIdentityPolicy::new(config.secret_key.as_bytes())
                     // domain?
                     // https://docs.rs/actix-identity/0.3.0-alpha.1/actix_identity/struct.CookieIdentityPolicy.html
                     .name("auth-cookie")
