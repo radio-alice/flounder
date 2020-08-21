@@ -638,10 +638,10 @@ pub async fn run_server(config_path: String) -> std::io::Result<()> {
             
             .wrap(IdentityService::new(
                 CookieIdentityPolicy::new(config.secret_key.as_bytes())
-                    // domain?
                     // https://docs.rs/actix-identity/0.3.0-alpha.1/actix_identity/struct.CookieIdentityPolicy.html
+                    .max_age(7776000) // 90 days
                     .name("auth-cookie")
-                    .secure(false),
+                    .secure(config.tls_enabled),
             ))
             .data(conn)
             .app_data(web::Form::<EditFileForm>::configure(|cfg| {

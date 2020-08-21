@@ -4,4 +4,4 @@ tls_enabled = false
 server_name = "flounder.local:5000"
 serve_all_content = true
 static_path = "static"
-secret_key = "very_secure"
+secret_key = "very_secure....................."
