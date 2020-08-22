@@ -12,6 +12,7 @@ struct RawParam {
   raw: u8,
 }
 
+/// return user index, requested file, or 404
 pub async fn get(request: crate::Request) -> tide::Result {
   let State { config, db: _ } = request.state();
   let username = request.param::<String>("person")?;

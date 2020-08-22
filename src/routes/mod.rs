@@ -31,6 +31,7 @@ pub async fn index(request: crate::Request) -> tide::Result {
     let people_raw = Person::all_names().fetch_all(db).await?;
     let people = people_raw.iter().map(|(person,)| &person[..]).collect();
     let files_raw = File::get_recent().fetch_all(db).await?;
+    // File -> RenderedFile
     let files = files_raw
         .iter()
         .map(|file| RenderedFile {
@@ -75,6 +76,7 @@ pub async fn statuses_post(mut request: crate::Request) -> tide::Result {
         .open(&twtxt_path)?;
     let form = deserialize_body::<AppendStatusForm>(&mut request).await?;
     match twtxt_file.write_all(form.status_text.as_bytes()) {
+        // update file in db iff write succeeds
         Ok(_) => {
             File::upsert(
                 "twtxt.txt",

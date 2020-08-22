@@ -43,6 +43,7 @@ enum Sub {
     RunServer(RunServer),
 }
 
+/// read in from config file
 #[derive(Deserialize, Clone)]
 pub struct Config {
     tide_secret: String,
@@ -53,6 +54,7 @@ pub struct Config {
     static_path: String,
 }
 
+/// app state acessible with request.state()
 #[derive(Clone)]
 pub struct State {
     db: SqlitePool,
@@ -65,6 +67,7 @@ async fn db_connection(db_url: &str) -> tide::Result<SqlitePool> {
     Ok(SqlitePool::new(db_url).await?)
 }
 
+/// returns an sqlite-backed session store middleware accessible with request.session()
 async fn build_session_middleware(
     db: SqlitePool,
     secret: &str,

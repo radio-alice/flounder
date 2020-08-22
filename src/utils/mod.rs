@@ -19,6 +19,7 @@ where
     }
 }
 
+/// use request.get_person() to get logged in person IFF it is required that they be logged in
 pub trait GetPerson {
     fn get_person(&self) -> Result<Person, tide::Error>;
 }

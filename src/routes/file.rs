@@ -76,10 +76,7 @@ pub async fn delete(request: crate::Request) -> tide::Result {
 
 pub async fn post_upload(mut request: crate::Request) -> tide::Result {
   let State { config, db } = request.state().clone();
-  let person: Person = request
-    .session()
-    .get("person")
-    .ok_or_else(|| Error::from_str(StatusCode::Unauthorized, "yo you're not logged in"))?;
+  let person = request.get_person()?;
 
   let (count,) = File::count_for_person(person.id).fetch_one(&db).await?;
   if count >= 128 {
@@ -89,7 +86,6 @@ pub async fn post_upload(mut request: crate::Request) -> tide::Result {
     ));
   }
 
-  let file_directory: String = config.file_directory.clone();
   let stream = request.take_body();
   let content_type = request
     .content_type()
@@ -99,5 +95,5 @@ pub async fn post_upload(mut request: crate::Request) -> tide::Result {
     .ok_or_else(|| Error::from_str(StatusCode::BadRequest, "no boundary param on content type"))?
     .as_str();
 
-  File::stream_in_multipart(stream, boundary, &file_directory, &person, &db).await
+  File::stream_in_multipart(stream, boundary, &config.file_directory, &person, &db).await
 }
