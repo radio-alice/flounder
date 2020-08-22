@@ -19,6 +19,7 @@ static INLINE_AUDIO_EXTENSIONS: &[&str] = &[".mp3", ".ogg"];
 
 static PROXY_URL: &str = "https://portal.mozz.us/gemini/";
 
+// TODO -- write a better parser...
 
 /// Convert Gemini text to Flounder-styled HTML.
 pub fn gemtext_to_html(input_text: &str) -> String {
@@ -79,7 +80,9 @@ pub fn gemtext_to_html(input_text: &str) -> String {
                 }
             }
             // String allocation for readability
-            output.push_str(&format!("<h{}>", count));
+            let mut name = String::new();
+            escape_href(&mut name, &line[count..].trim());
+            output.push_str(&format!("<h{} id=\"{}\">", count, name));
             escape_html(&mut output, &line[count..].trim());
             output.push_str(&format!("</h{}>\n", count));
         // 5.5.3 Quote lines
@@ -210,19 +213,19 @@ mod tests {
     fn test_headers() {
         assert_eq!(
             gemtext_to_html("#header"),
-            "<h1>header</h1>\n"
+            "<h1 id=\"header\">header</h1>\n"
             );
         assert_eq!(
             gemtext_to_html("##header"),
-            "<h2>header</h2>\n"
+            "<h2 id=\"header\">header</h2>\n"
             );
         assert_eq!(
             gemtext_to_html("### header"),
-            "<h3>header</h3>\n"
+            "<h3 id=\"header\">header</h3>\n"
             );
         assert_eq!(
             gemtext_to_html("####header"),
-            "<h3>#header</h3>\n"
+            "<h3 id=\"#header\">#header</h3>\n"
             );
     }
 
