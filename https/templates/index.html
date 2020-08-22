@@ -3,6 +3,9 @@
 {% block content %}
   <h1>🐟Flounder!</h1>
   {% include "header.html" %}
+  <p>
+  To get started and to follow site-wide updates, check the <b><a href="https://admin.{{server_name}}">admin</a></b> page!
+  </p>
   <h2>All users:</h2>
   {% for user in users %}
   <a href="https://{{user}}.{{server_name}}"><b>{{user}}</b></a> 

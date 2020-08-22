@@ -36,3 +36,5 @@ Here's a rough outline of things you'll need to configure your server to do:
 
 
 Flounder requires two servers -- an https server and a gemini server. For my deployment, I use nginx and molly-brown. Much of the routing and settings occurs at this level. I will add this to the documentation once it is more stable. 
+
+The admin user is a special user that allows you to make site-wide announcements, etc. 
