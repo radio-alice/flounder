@@ -1,4 +1,4 @@
-db_path = "flounder.db"
+db_path = "../flounder.db"
 file_directory = "tmp"
 tls_enabled = false
 server_name = "flounder.local:5000"

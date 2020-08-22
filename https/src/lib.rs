@@ -233,7 +233,7 @@ async fn index(
         JOIN user
         ON file.user_id = user.id
         ORDER BY file.updated_at DESC
-        LIMIT 64"#,
+        LIMIT 32"#,
     )?;
     let files_res = stmt.query_map(NO_PARAMS, |row| {
         Ok(RenderedFile {
