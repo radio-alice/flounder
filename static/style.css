@@ -1,7 +1,7 @@
-main{
-  max-width:70ch;
-  padding:2ch;
-  margin:auto;
+main {
+  max-width: 70ch;
+  padding: 2ch;
+  margin: auto;
   font-family: Helvetica, Arial, monospace;
   word-wrap: break-word;
 }
@@ -16,10 +16,10 @@ img {
 
 #editor {
   width: 100%;
-  border:1px solid #999999;
-  width:100%;
-  margin:5px 0;
-  padding:3px;
+  border: 1px solid #999999;
+  width: 100%;
+  margin: 5px 0;
+  padding: 3px;
   resize: none;
 }
 
@@ -27,26 +27,26 @@ img {
   border: 1px solid black;
   margin-top: 3px;
   margin-bottom: 3px;
-  padding-left: .5ch;
+  padding-left: 0.5ch;
 }
 
 .status-text {
   font-family: monospace;
-  padding: .5ch;
+  padding: 0.5ch;
 }
 
 .button {
-background-color: white; /* Green */
-border: 1px solid black;
-text-decoration: none;
-padding:2px 5px;
-display: inline-block;
-margin: 0px;
-transition-duration: 0.2s;
+  background-color: white; /* Green */
+  border: 1px solid black;
+  text-decoration: none;
+  padding: 2px 5px;
+  display: inline-block;
+  margin: 0px;
+  transition-duration: 0.2s;
 }
 
 .button:hover {
-  background-color: black; 
+  background-color: black;
   color: white;
 }
 
@@ -60,6 +60,6 @@ a {
 }
 
 a:hover {
-  background-color: black; 
+  background-color: black;
   color: white;
 }

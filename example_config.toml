@@ -1,6 +1,17 @@
-db_path = "flounder.db"
-file_directory = "tmp"
-tls_enabled = false
-server_name = "flounder.local:5000"
-serve_all_content = true
+# very special 32 bytes of stuff that encrypts your session I think?
+tide_secret = "SHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHisthis32byet"
+
+# your domain url
+root_domain = "e-worm.club"
+
+# what you want to call your server
+server_name = "e-worm club"
+
+# db_url must be prefixed with "sqlite:"
+db_path = "sqlite:db/sqlite3.db"
+
+# no home directory tildes please
+file_directory = "/home/me/.flounder"
+
+# where to find your custom css etc
 static_path = "static"

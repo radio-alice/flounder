@@ -1,6 +1,7 @@
 /target
 **/*.rs.bk
-*.db
+*.db*
 tmp
 deploy.sh
 static/js/codemirror.js
+flounder.toml

@@ -6,7 +6,7 @@ I'm really interested in the ideas behind [Tildeverse](https://tildeverse.org/) 
 
 Maybe Future Feature Ideas:
 
-* Support [Webmentions](https://indieweb.org/Webmention)? 
+* Support [Webmentions](https://indieweb.org/Webmention)?
 
 ## Development
 
@@ -14,12 +14,14 @@ Requires sqlite3 libraries
 
 To run the development server:
 
-```
-cargo build .
+```bash
+# create a config file (you're gonna want to change the default values)
+$ cp example_config.toml config.toml
+$ cargo build .
 # Apply the schema
-sqlite3 < schema.sql flounder.db
+$ sqlite3 < schema.sql db/sqlite3.db
 # Run development server
-./target/debug/flounder run --config example_config.toml
+$ ./target/debug/flounder run
 ```
 
 ## Deployment
