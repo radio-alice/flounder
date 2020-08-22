@@ -1,6 +1,5 @@
-/target
+*/target
 **/*.rs.bk
 *.db
-tmp
-deploy.sh
-static/js/codemirror.js
+*tmp
+*deploy.sh
