@@ -23,25 +23,41 @@ type File struct {
 func main() {
     database, _ := sql.Open("sqlite3", "../flounder.db")
     t, _ := template.ParseFiles("index.gmi")
-    rows, _ := database.Query(`SELECT user.username, file.user_path, file.updated_at
+    rows, err := database.Query(`SELECT user.username, file.user_path, file.updated_at
 FROM file
 JOIN user
 ON file.user_id = user.id
 ORDER BY file.updated_at DESC
 LIMIT 32`)
+    if err != nil {
+      fmt.Print("40\r\n")
+      return
+    }
     var files []File
     for rows.Next() {
       var file File
       var unixTime int64
-      _ = rows.Scan(&file.UserName, &file.FileName, &unixTime)
+      err = rows.Scan(&file.UserName, &file.FileName, &unixTime)
+      if err != nil {
+        fmt.Print("40\r\n")
+        return
+      }
       file.UpdatedAt = time.Unix(unixTime, 0)
       files = append(files, file)
     }
-    rows, _ = database.Query(`SELECT username from user`)
+    rows, err = database.Query(`SELECT username from user`)
+    if err != nil {
+      fmt.Print("40\r\n")
+      return
+    }
     var users []string
     for rows.Next() {
       var user string
-      _ = rows.Scan(&user)
+      err = rows.Scan(&user)
+      if err != nil {
+        fmt.Print("40\r\n")
+        return
+      }
       users = append(users, user)
     }
     rand.Seed(time.Now().UnixNano())
@@ -58,7 +74,11 @@ LIMIT 32`)
       Users: users,
     }
     buf := new(bytes.Buffer)
-    _ = t.Execute(buf, data)
+    err = t.Execute(buf, data)
+    if err != nil {
+      fmt.Print("40\r\n")
+      return
+    }
     newbuf := buf.String()
     scanner := bufio.NewScanner(strings.NewReader(newbuf))
     fmt.Print("20 text/gemini\r\n")
@@ -66,6 +86,4 @@ LIMIT 32`)
       fmt.Print(scanner.Text())
       fmt.Print("\r\n")
     }
-// TODO -- output properly
-    // todo err handling
 }
