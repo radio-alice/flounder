@@ -3,11 +3,13 @@ package main
 
 import (
   "database/sql"
+  "bytes"
+  "strings"
+  "bufio"
   "html/template"
-  "os"
   "math/rand"
   "time"
-  // "fmt"
+  "fmt"
   _ "github.com/mattn/go-sqlite3"
 )
 // get config file
@@ -55,6 +57,15 @@ LIMIT 32`)
       Files: files,
       Users: users,
     }
-    _ = t.Execute(os.Stdout, data)
+    buf := new(bytes.Buffer)
+    _ = t.Execute(buf, data)
+    newbuf := buf.String()
+    scanner := bufio.NewScanner(strings.NewReader(newbuf))
+    fmt.Print("20 text/gemini\r\n")
+    for scanner.Scan() {
+      fmt.Print(scanner.Text())
+      fmt.Print("\r\n")
+    }
+// TODO -- output properly
     // todo err handling
 }
