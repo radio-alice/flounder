@@ -3,8 +3,8 @@ use askama::Template;
 #[derive(Template)]
 #[template(path = "gmi_page.html")]
 pub struct GmiPageTemplate<'a> {
-  pub title: &'a str,
-  pub html_block: &'a str,
+  title: &'a str,
+  html_block: &'a str,
 }
 
 impl<'a> GmiPageTemplate<'a> {
