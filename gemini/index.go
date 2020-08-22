@@ -5,6 +5,7 @@ import (
   "database/sql"
   "html/template"
   "os"
+  "math/rand"
   "time"
   // "fmt"
   _ "github.com/mattn/go-sqlite3"
@@ -18,7 +19,6 @@ type File struct {
 }
 
 func main() {
-  // route ?
     database, _ := sql.Open("sqlite3", "../flounder.db")
     t, _ := template.ParseFiles("index.gmi")
     rows, _ := database.Query(`SELECT user.username, file.user_path, file.updated_at
@@ -42,6 +42,10 @@ LIMIT 32`)
       _ = rows.Scan(&user)
       users = append(users, user)
     }
+    rand.Seed(time.Now().UnixNano())
+    rand.Shuffle(len(users), func(i, j int) { users[i], users[j] = users[j], users[i] })
+
+
     data := struct {
       Domain string
       Files []File 
