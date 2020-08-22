@@ -1,0 +1,13 @@
+{{$domain := .Domain}}
+# 🐟Flounder!
+
+=> gemini://admin.{{$domain}} Admin page
+=> https://{{$domain}} View on HTTPS
+
+## All Users:
+{{range .Users}}=> gemini://{{.}}.{{$domain}}
+{{end}}
+
+## Recently updated files:
+{{range .Files}}=> gemini://{{.UserName}}.{{$domain}}/{{.FileName}} {{.FileName}} ({{.UpdatedAt}})
+{{end}}
