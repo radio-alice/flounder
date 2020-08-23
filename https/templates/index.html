@@ -4,14 +4,13 @@
 {% include "header.html" %}
 <h2>All users:</h2>
 {% for person in people %}
-<a href="https://{{person}}.{{config.root_domain}}">{{person}}</a>
+<a href="https://{{person}}.{{config.root_domain}} class='person-link'">{{person}}</a>
 {%endfor%}
 <h2>Recently updated files:</h2>
 {% for file in files %}
 <div>
-  <a href="https://{{file.username}}.{{config.root_domain}}">
-    {{ file.username }}
-  </a>
+  <a href="https://{{file.username}}.{{config.root_domain}} class='person-link'">
+   {{ file.username }}</a>
   <em>{{file.time_ago}}</em>
   <a href="https://{{file.username}}.{{config.root_domain}}/{{file.user_path}}">
     {{ file.user_path }}

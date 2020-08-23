@@ -42,8 +42,7 @@
 {% for status in statuses %}
 <div class="status">
   <a href="https://{{status.username}}.{{config.root_domain}}">
-  {{status.username}}
-  </a>
+  {{status.username}}</a>
   <em>{{status.time_ago}}</em>
   <div class="status-text">{{status.text}}</div>
 </div>

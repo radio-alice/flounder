@@ -5,9 +5,6 @@
     {% when Some with (p) %}
       <a href="/sign/out">/sign/out</a>
       <a href="/my_site">/my_site</a>
-      <a href="{{p.username}}.{{config.root_domain}}">
-        {{p.username}}.{{config.root_domain}}
-      </a>
     {% when None %}
       <a href="/sign/in">/sign/in</a>
       <a href="/sign/up">/sign/up</a>
