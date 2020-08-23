@@ -47,7 +47,7 @@ enum Sub {
 #[derive(Deserialize, Clone)]
 pub struct Config {
     tide_secret: String,
-    db_path: String,
+    db_uri: String,
     root_domain: String,
     server_name: String,
     file_directory: String,
@@ -82,7 +82,7 @@ async fn run_server(config_file: &str) -> tide::Result<()> {
     tide::log::with_level(tide::log::LevelFilter::Info);
     let config_str = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_str)?;
-    let db = db_connection(&config.db_path).await?;
+    let db = db_connection(&config.db_uri).await?;
 
     // check if file_dir exists and panic if it doesn't & we can't create it
     let file_dir_exists = Path::new(&config.file_directory).exists();

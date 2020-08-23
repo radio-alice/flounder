@@ -2,13 +2,13 @@
 tide_secret = "SHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHisthis32byet"
 
 # your domain url
-root_domain = "e-worm.club"
+root_domain = "flounder.online"
 
 # what you want to call your server
-server_name = "e-worm club"
+server_name = "Flounder 🐟"
 
 # db_url must be prefixed with "sqlite:"
-db_path = "sqlite:db/sqlite3.db"
+db_uri = "sqlite:db/sqlite3.db"
 
 # no home directory tildes please
 file_directory = "/home/me/.flounder"
