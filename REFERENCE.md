@@ -1,17 +1,3 @@
-# Notes on Changes
-* remove unused config vars
-* add root_domain config var and change server_name to be the name of the server, not the domain
-* /user -> /person :)
-* move /static/styles/styles.css to /static/styles.css
-* remove FlounderError in favor of using tide's errors and result type– generally helps make error handling a lot cleaner since every route just returns tide::Result, so you can use all the `?` result handling you want
-* switch to sqlx over rustqlite– a little cleaner api and works well with tide + tide sessions
-* move escape + gemini2html to a utils crate
-* separate lib.rs out into records, routes, templates
-* put all the user-session routes in one place– /sign/in, /sign/up, /sign/out
-* remove extraneous <br>s– css should prob handle this
-* only allow editing for text files
-* right now I don't have the error page hooked up, since it wasn't used anywhere I could see, but would prob be a good thing to attach as a body to our error responses eventually
-* change `.ok()` to `.unwrap()` in main so we can see why it fails if it does
 # Associated notes on how to tinker with this
 
 ## Routing
