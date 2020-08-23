@@ -1,11 +1,12 @@
-<div>
-<a href="/">Home</a>
-<a href="/statuses">Statuses</a>
-{% if logged_in %}
-<a href="/my_site">Manage Your Site</a>
-<a href="/logout">Logout</a>
-{% else %}
-<a href="/login">Login/Register</a>
-{% endif %}
-</div>
-
+<nav>
+  <a href="/">home</a>
+  <a href="/statuses">/statuses</a>
+  {% match person %}
+    {% when Some with (p) %}
+      <a href="/sign/out">/sign/out</a>
+      <a href="/my_site">/my_site</a>
+    {% when None %}
+      <a href="/sign/in">/sign/in</a>
+      <a href="/sign/up">/sign/up</a>
+  {% endmatch %}
+</nav>

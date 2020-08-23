@@ -1,17 +1,19 @@
 {% extends "base.html" %}
-
 {% block content %}
-  <h1>🐟Flounder!</h1>
-  {% include "header.html" %}
-  <p>
-  To get started and to follow site-wide updates, check the <b><a href="https://admin.{{server_name}}">admin</a></b> page!
-  </p>
-  <h2>All users:</h2>
-  {% for user in users %}
-  <a href="https://{{user}}.{{server_name}}"><b>{{user}}</b></a> 
-  {%endfor%}
-  <h2>Recently updated files:</h2>
-    {% for file in files %}
-    <div><b><a href="https://{{file.username}}.{{server_name}}">{{ file.username }}</a></b> <em>{{file.time_ago}}</em> <a href="https://{{file.username}}.{{server_name}}/{{file.user_path}}">{{ file.user_path }}</a>  </div>
-    {% endfor %}
-{% endblock %}
+<h1>{{config.server_name}}</h1>
+{% include "header.html" %}
+<h2>All users:</h2>
+{% for person in people %}
+<a href="https://{{person}}.{{config.root_domain}} class='person-link'">{{person}}</a>
+{%endfor%}
+<h2>Recently updated files:</h2>
+{% for file in files %}
+<div>
+  <a href="https://{{file.username}}.{{config.root_domain}} class='person-link'">
+   {{ file.username }}</a>
+  <em>{{file.time_ago}}</em>
+  <a href="https://{{file.username}}.{{config.root_domain}}/{{file.user_path}}">
+    {{ file.user_path }}
+  </a>
+</div>
+{% endfor %} {% endblock %}

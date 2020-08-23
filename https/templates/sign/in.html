@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Log in</h1>
+<form action="/sign/in" method="post">
+  <p>
+    <label for="username">Username</label>
+    <input id="username" name="username" size="32" type="text" value="" />
+  </p>
+  <p>
+    <label for="password">Password</label>
+    <input id="password" name="password" size="32" type="password" value="" />
+  </p>
+  {% match error %}
+    {% when Some with (e) %}
+    <div class="error">
+      <p>{{e}}</p>
+    </div>
+    {% when None %}
+  {% endmatch %}
+  <p>
+    <input
+      class="button"
+      id="submit"
+      name="submit"
+      type="submit"
+      value="Log in"
+    />
+  </p>
+</form>
+{% endblock %}

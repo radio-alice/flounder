@@ -5,24 +5,24 @@ name = "flounder"
 version = "0.1.0"
 
 [dependencies]
-actix-files = "0.2.2" 
-actix-identity = "0.2.1" 
-actix-multipart = "0.2" 
-actix-ratelimit = "0.2.1" 
-actix-rt = "1.0" 
-actix-web = "2.0" 
-argh = "0.1.3" 
-askama = "0.10" 
-bcrypt = "0.8" 
-bytes = "0.5.6" 
-chrono = "0.4.13" 
-derive_more = "*" 
-env_logger = "0.7.1" 
-futures = "0.3.5" 
-native-tls = "0.2.4" 
-rand = "0.7.3"
-rusqlite = "0.23.1" 
+anyhow = "1.0"
+argh = "0.1.3"
+askama = { version = "0.10", features = ["with-tide"] }
+bcrypt = "0.8"
+async-std = { version = "1.6", features = ["attributes"]}
+tide = "0.13"
+sqlx = { version = "0.3.5", features = ["sqlite", "chrono"] }
+serde = "1.0.115"
+serde_urlencoded = "0.6.1"
+askama_tide = "0.10"
+async-sqlx-session = { version = "0.2.0", features = ["sqlite"] }
+toml = "0.5"
 sanitize-filename = "0.2.1" # TODO audit
-serde = {version = "1.0", features = ["derive"]} 
-toml = "0.5" 
-url = "2.1.1"
+multer = "1.2"
+futures= "0.3"
+url = "2.1"
+chrono = "0.4"
+
+[patch.crates-io]
+askama_tide = { git = "https://github.com/jbr/askama", branch = "update-tide-to-0.13" }
+askama = { git = "https://github.com/jbr/askama", branch = "update-tide-to-0.13" }

@@ -1,24 +1,48 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>🐟Flounder: Managing <a href="https://{{username}}.{{server_name}}">{{username}}.{{server_name}}</a></h1>
+{# should always be Some(person)- just here to destructure #}
+{% match person %}
+{% when Some with (p) %}
+<h1>Managing
+  <a href="https://{{p.username}}.{{config.root_domain}}">
+    {{p.username}}.{{config.root_domain}}
+  </a>
+</h1>
 {% include "header.html" %}
 <h3>Your files:</h3>
 {% for file in files %}
-<div><b><a href="https://{{file.username}}.{{server_name}}/{{file.user_path}}">{{ file.user_path }}</a></b>  <a href="/edit/{{file.user_path}}">edit</a>  <form action="/delete/{{file.user_path}}" method="POST" class="inline"> <input class="button" type="submit" onclick="return confirm('Are you sure you want to delete this file?');" value="delete"></form>
+<div>
+  <a href="https://{{p.username}}.{{config.root_domain}}/{{file.user_path}}">
+      {{ file.user_path }}</a>
+  {% if file.text_extension() %}
+  <a href="/edit/{{file.user_path}}">edit</a>
+  {% endif %}
+  <form action="/delete/{{file.user_path}}" method="POST" class="inline">
+    <input
+      class="button"
+      type="submit"
+      onclick="return confirm('Are you sure you want to delete this file?');"
+      value="delete"
+    />
+  </form>
 </div>
 {% endfor %}
 <h3>Create file by name:</h3>
 <noscript>Create a new page by going to /edit/{filename}</noscript>
-<input id="edit_new" placeholder="New filename, e.g. newfile.gmi"> <a href="#" id="create_new">Edit new page</a>
-<br>
+<input id="edit_new" placeholder="New filename, e.g. newfile.gmi" />
+<a href="#" id="create_new">Edit new page</a><br>
 <script>
-    var input = document.getElementById('edit_new');
-    var create = document.getElementById('create_new');
-    input.onchange = input.onkeyup = function() {create.href = "/edit/" + input.value;};
+  var input = document.getElementById('edit_new')
+  var create = document.getElementById('create_new')
+  input.onchange = input.onkeyup = function () {
+    create.href = '/edit/' + input.value
+  }
 </script>
-<br>
+<br />
 <form action="/upload" enctype="multipart/form-data" method="POST">
-  <input type="file" id="myFile" name="file" multiple>
-  <input type="submit" value="Upload file" class="button">
+  <input type="file" id="myFile" name="file" multiple />
+  <input type="submit" value="Upload file" class="button" />
 </form>
+{% when None %}
+{% endmatch %}
 {% endblock %}

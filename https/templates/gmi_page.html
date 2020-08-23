@@ -1,15 +1,15 @@
 <html>
-<head>
-  <title>{{title}}</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <link rel="stylesheet" type="text/css" href="/static/styles/style.css">
-  <meta name="Description" content="Flounder -- a place for gemini pages">
-
-</head>
-<body>
-  <main>
-    {{html_block|safe }}
-  </main>
-</body>
+  <head>
+    <title>{{title}}</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    {# TODO pass in config and replace "Flounder" with {{config.server_name}} ? #}
+    <meta name="Description" content="Flounder -- a place for gemini pages" />
+  </head>
+  <body>
+    <main>
+      {{html_block|safe}}
+    </main>
+  </body>
 </html>

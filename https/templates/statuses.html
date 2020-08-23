@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <script>
   // todo: move this logic to backend (so you can replace js with <form>)
@@ -12,9 +11,9 @@
       '\n'
     new_status = new_status.replace(
       /\@([a-z0-9]*)\b/i,
-      '@<$1 https://$1.{{server_name}}/twtxt.txt>'
+      '@<$1 https://$1.{{config.root_domain}}/twtxt.txt>'
     )
-    fetch('/statuses/new', {
+    fetch('/statuses', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -26,25 +25,27 @@
     })
   }
 </script>
-<h1>🐟Flounder: Statuses</h1>
+<h1>{{config.server_name}} Statuses</h1>
 {% include "header.html" %}
 <h2>Recent status updates:</h2>
-{% if logged_in %}
+{% match person %}
+  {% when Some with (p) %}
   <textarea
     id="new-status"
     placeholder="status text"
     maxlength="280"
     cols="70"
-    rows="2"
-  ></textarea>
-  <br />
+    rows="2"></textarea>
   <button onclick="postStatus()" class="button">Post new status</button>
-  <br><br>
-{% endif %}
+  {% when None %}
+{% endmatch %}
 {% for status in statuses %}
 <div class="status">
-  <a href="https://{{status.username}}.{{server_name}}"><b>{{status.username}}</b></a> <em>{{status.time_ago}}</em><br>
-  <div class="status-text">{{status.text}}</div></div>
+  <a href="https://{{status.username}}.{{config.root_domain}}">
+  {{status.username}}</a>
+  <em>{{status.time_ago}}</em>
+  <div class="status-text">{{status.text}}</div>
+</div>
 {%endfor%}
 {% if statuses.len() == 0 %}
 <p>No one has posted any statuses yet!</p>

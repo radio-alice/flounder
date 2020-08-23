@@ -1,5 +1,7 @@
-*/target
+*target/
 **/*.rs.bk
-*.db
-*tmp
-*deploy.sh
+*.db*
+tmp
+deploy.sh
+static/js/codemirror.js
+flounder.toml

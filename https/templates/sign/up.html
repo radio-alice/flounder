@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Register</h1>
+<form action="/sign/up" method="post">
+  <div>
+    <label for="username">Username</label>
+    <input
+      id="username"
+      name="username"
+      size="32"
+      type="text"
+      value=""
+    />.{{config.root_domain}}
+  </div>
+  <div>
+    <label for="email">Email</label>
+    <input id="email" name="email" size="64" type="text" value="" />
+    <p>Feel free to use something anonymous – we just might need to contact you someday</p>
+  </div>
+  <div>
+    <label for="password">Password</label>
+    <input id="password" name="password" size="32" type="password" value="" />
+  </div>
+  <div>
+    <label for="password2">Repeat Password</label>
+    <input id="password2" name="password2" size="32" type="password" value="" />
+  </div>
+  <div class="error">{% for error in errors %}<p>{{error}}</p>{% endfor %}</div>
+  <div>
+    <input
+      class="button"
+      id="submit"
+      name="submit"
+      type="submit"
+      value="Join"
+    />
+  </div>
+</form>
+{% endblock %}
