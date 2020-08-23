@@ -35,3 +35,10 @@ Here's a rough outline of things you'll need to configure your server to do:
 - proxy {user}.flounder.online to flounder.online/user/{user} with default path being index.gmi
 - proxy {user}.flounder.online/static/style.css to flounder.online/static/style.css
 - limit body to 32KB
+
+
+Flounder requires two servers -- an https server and a gemini server. For my deployment, I use nginx and molly-brown. Much of the routing and settings occurs at this level. I will add this to the documentation once it is more stable. 
+
+I have to use a modified version of molly-brown to route subdomains. I'll share when it's more stable or merged into master.
+
+The admin user is a special user that allows you to make site-wide announcements, etc. 
