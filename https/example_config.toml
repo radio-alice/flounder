@@ -8,10 +8,14 @@ root_domain = "flounder.online"
 server_name = "Flounder 🐟"
 
 # db_url must be prefixed with "sqlite:"
-db_uri = "sqlite:../flounder.db"
+db_uri = "sqlite:../db/sqlite3.db"
 
 # no home directory tildes please
 file_directory = "files"
 
 # where to find your custom css etc
 static_path = "static"
+
+# https://docs.rs/tide/0.13.0/tide/log/enum.LevelFilter.html
+# prob just leave this as WARN unless you know what you're doing
+log_level = "WARN"
