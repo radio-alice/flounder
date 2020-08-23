@@ -2,7 +2,7 @@
 {% block content %}
 <h1>{{config.server_name}}</h1>
 {% include "header.html" %}
-<h2>All the homies:</h2>
+<h2>All users:</h2>
 {% for person in people %}
 <a href="https://{{person}}.{{config.root_domain}}">{{person}}</a>
 {%endfor%}

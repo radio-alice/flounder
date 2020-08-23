@@ -19,24 +19,24 @@ impl NewPerson {
       || &self.username.to_lowercase() == "www"
       || &self.username.to_lowercase() == "proxy"
     {
-      errors.push("pick a different name buddy");
+      errors.push("Reserved name");
     }
     if !self
       .username
       .chars()
-      .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+      .all(|c| c.is_ascii_alphanumeric() || c == '-')
     {
-      errors.push("Username must only contain a-z, 0-9, '-', and '_'");
+      errors.push("Username must only contain a-z, 0-9 or '-'");
     }
     if !self.email.contains('@') {
       // world's dumbest email verification (we dont really use email)
-      errors.push("that's not an email");
+      errors.push("");
     }
     if self.password != self.password2 {
       errors.push("Passwords do not match");
     }
     if self.password.len() < 6 {
-      errors.push("ok can we maybe use a longer password");
+      errors.push("OK can we maybe use a longer password");
     }
     errors
   }

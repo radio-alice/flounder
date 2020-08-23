@@ -8,10 +8,10 @@ root_domain = "flounder.online"
 server_name = "Flounder 🐟"
 
 # db_url must be prefixed with "sqlite:"
-db_uri = "sqlite:db/sqlite3.db"
+db_uri = "sqlite:../flounder.db"
 
 # no home directory tildes please
-file_directory = "/home/me/.flounder"
+file_directory = "files"
 
 # where to find your custom css etc
 static_path = "static"
