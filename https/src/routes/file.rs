@@ -16,7 +16,7 @@ pub async fn get_edit(request: crate::Request) -> tide::Result {
   let State { db: _, config } = request.state();
   let file_name = request
     .param::<String>("file_name")
-    .map_err(|_| Error::from_str(StatusCode::BadRequest, "you can't edit nothing homie"))?;
+    .map_err(|_| Error::from_str(StatusCode::BadRequest, "Please provide filename"))?;
   let person: Person = request.get_person()?;
   let full_path = File::get_full_path(&config.file_directory, &person.username, &file_name);
   let file_text = std::fs::read_to_string(full_path).unwrap_or_else(|_| "".into());
@@ -30,13 +30,13 @@ pub async fn post_edit(mut request: crate::Request) -> tide::Result {
   let file_text = file_form.file_text.as_bytes();
   let file_name = request
     .param::<String>("file_name")
-    .map_err(|_| Error::from_str(StatusCode::BadRequest, "you can't edit nothing homie"))?;
+    .map_err(|_| Error::from_str(StatusCode::BadRequest, "Please provide filename"))?;
   let sanitized_file = &sanitize_filename::sanitize(&file_name);
   let full_path = File::get_full_path(&config.file_directory, &person.username, &file_name);
   let path_str = full_path.to_str().ok_or_else(|| {
     Error::from_str(
       StatusCode::InternalServerError,
-      "couldn't convert path to string",
+      "Couldn't convert path to string",
     )
   })?;
   File::upsert(sanitized_file, person.id, &path_str)
@@ -59,14 +59,14 @@ pub async fn delete(request: crate::Request) -> tide::Result {
   if !full_path.exists() {
     return Err(Error::from_str(
       StatusCode::NotFound,
-      "that file doesn't exist",
+      "That file doesn't exist",
     ));
   }
   File::delete_from_fs(&full_path);
   File::delete_by_path(full_path.to_str().ok_or_else(|| {
     Error::from_str(
       StatusCode::InternalServerError,
-      "couldn't get path as string??",
+      "Couldn't get path as string",
     )
   })?)
   .execute(db)
@@ -82,17 +82,17 @@ pub async fn post_upload(mut request: crate::Request) -> tide::Result {
   if count >= 128 {
     return Err(Error::from_str(
       StatusCode::InsufficientStorage,
-      "you got too many files bud— try deleting some?",
+      "You have too many files — try deleting some?",
     ));
   }
 
   let stream = request.take_body();
   let content_type = request
     .content_type()
-    .ok_or_else(|| Error::from_str(StatusCode::BadRequest, "no content type"))?;
+    .ok_or_else(|| Error::from_str(StatusCode::BadRequest, "No content type"))?;
   let boundary = content_type
     .param("boundary")
-    .ok_or_else(|| Error::from_str(StatusCode::BadRequest, "no boundary param on content type"))?
+    .ok_or_else(|| Error::from_str(StatusCode::BadRequest, "No boundary param on content type"))?
     .as_str();
 
   File::stream_in_multipart(stream, boundary, &config.file_directory, &person, &db).await

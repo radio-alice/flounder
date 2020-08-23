@@ -137,7 +137,7 @@ impl File {
       if !File::ok_extension(file_name) {
         return Err(Error::from_str(
           StatusCode::BadRequest,
-          "we don't take that kind of file here",
+          "We don't take that kind of file here",
         ));
       }
       let sanitized_file_name = &sanitize_filename::sanitize(file_name);

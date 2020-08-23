@@ -84,7 +84,7 @@ pub async fn statuses_post(mut request: crate::Request) -> tide::Result {
                 twtxt_path.to_str().ok_or_else(|| {
                     Error::from_str(
                         StatusCode::InternalServerError,
-                        "couldn't convert path to string",
+                        "Couldn't convert path to string",
                     )
                 })?,
             )
@@ -94,7 +94,7 @@ pub async fn statuses_post(mut request: crate::Request) -> tide::Result {
         }
         Err(_) => Ok(Error::from_str(
             StatusCode::InternalServerError,
-            "failed to write to twtxt file",
+            "Failed to write to twtxt file",
         )
         .into()),
     }

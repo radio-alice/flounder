@@ -35,7 +35,7 @@ impl LoginForm {
     if bcrypt::verify(&self.password, &person.password_hash)? {
       Ok(())
     } else {
-      Err(anyhow!("wrong password"))
+      Err(anyhow!("Wrong password"))
     }
   }
 }
@@ -85,7 +85,7 @@ pub async fn post_up(mut request: crate::Request) -> tide::Result {
     let person = Person::find_by_id(person_id)
       .fetch_one(db)
       .await
-      .map_err(|_| Error::from_str(StatusCode::Conflict, "that username or email is taken"))?;
+      .map_err(|_| Error::from_str(StatusCode::Conflict, "That username or email is taken"))?;
 
     // create person's directory
     person
@@ -99,7 +99,7 @@ pub async fn post_up(mut request: crate::Request) -> tide::Result {
     let path_str = full_path.to_str().ok_or_else(|| {
       Error::from_str(
         StatusCode::InternalServerError,
-        "couldn't convert path to string",
+        "Couldn't convert path to string",
       )
     })?;
     File::upsert("index.gmi", person.id, path_str)

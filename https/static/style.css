@@ -57,6 +57,7 @@ img {
 a {
   color: black;
   transition-duration: 0.2s;
+  font-weight: bold;
 }
 
 a:hover {

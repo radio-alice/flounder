@@ -13,8 +13,7 @@
 {% for file in files %}
 <div>
   <a href="https://{{p.username}}.{{config.root_domain}}/{{file.user_path}}">
-    {{ file.user_path }}
-  </a>
+      {{ file.user_path }}</a>
   {% if file.text_extension() %}
   <a href="/edit/{{file.user_path}}">edit</a>
   {% endif %}
@@ -31,7 +30,7 @@
 <h3>Create file by name:</h3>
 <noscript>Create a new page by going to /edit/{filename}</noscript>
 <input id="edit_new" placeholder="New filename, e.g. newfile.gmi" />
-<a href="#" id="create_new">Edit new page</a>
+<a href="#" id="create_new">Edit new page</a><br>
 <script>
   var input = document.getElementById('edit_new')
   var create = document.getElementById('create_new')

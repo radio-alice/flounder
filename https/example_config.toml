@@ -11,7 +11,7 @@ server_name = "Flounder 🐟"
 db_uri = "sqlite:../db/sqlite3.db"
 
 # no home directory tildes please
-file_directory = "/home/me/.flounder"
+file_directory = "files"
 
 # where to find your custom css etc
 static_path = "static"

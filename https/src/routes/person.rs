@@ -26,7 +26,7 @@ pub async fn get(request: crate::Request) -> tide::Result {
     || full_path.extension() == Some(OsStr::new("gemini"))
   {
     let gmi_file = std::fs::read_to_string(full_path)
-      .map_err(|_| Error::from_str(StatusCode::NotFound, "not here buddy"))?;
+      .map_err(|_| Error::from_str(StatusCode::NotFound, "Not found"))?;
     if let Ok(RawParam { raw: 1 }) = request.query::<RawParam>() {
       return Ok(tide::Response::from(gmi_file));
     }
@@ -36,6 +36,6 @@ pub async fn get(request: crate::Request) -> tide::Result {
   } else if full_path.exists() {
     Ok(tide::Body::from_file(full_path).await?.into())
   } else {
-    Ok(Error::from_str(StatusCode::NotFound, "not here bucko").into())
+    Ok(Error::from_str(StatusCode::NotFound, "Not found").into())
   }
 }
