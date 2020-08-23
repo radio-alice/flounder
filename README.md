@@ -26,7 +26,7 @@ $ ./target/debug/flounder run
 
 ## Deployment
 
-Flounder's ultimate goal is to be able to be easily self-hosted. If you're careful and know what you're doing, you could ry deploying it, but I haven't written any guides on how to do so yet. The Actix server is not secure as-is, I use Nginx to handle a lot of the proxying. I'll share resources when this is more stable.
+Flounder's ultimate goal is to be able to be easily self-hosted. If you're careful and know what you're doing, you could ry deploying it, but I haven't written any guides on how to do so yet. The Actix server is not secure as-is, I use Nginx to handle a lot of the proxying. I'll share resources when this is more stable. 
 
 Here's a rough outline of things you'll need to configure your server to do:
 - xss protection in production
