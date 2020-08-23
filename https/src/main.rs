@@ -3,7 +3,9 @@ use async_sqlx_session::SqliteSessionStore;
 use serde::Deserialize;
 use sqlx::sqlite::SqlitePool;
 use std::path::Path;
+use std::str::FromStr;
 use std::time::Duration;
+use tide::log::LevelFilter;
 use tide::sessions::SessionMiddleware;
 
 mod records;
@@ -52,6 +54,7 @@ pub struct Config {
     server_name: String,
     file_directory: String,
     static_path: String,
+    log_level: String,
 }
 
 /// app state acessible with request.state()
@@ -79,9 +82,14 @@ async fn build_session_middleware(
 }
 
 async fn run_server(config_file: &str) -> tide::Result<()> {
-    tide::log::with_level(tide::log::LevelFilter::Info);
     let config_str = std::fs::read_to_string(config_file)?;
     let config: Config = toml::from_str(&config_str)?;
+
+    let log_level = LevelFilter::from_str(&config.log_level).unwrap_or_else(|_| {
+        println!("couldn't parse log_level from config\n must match one of these strings: https://docs.rs/log/0.4.11/src/log/lib.rs.html#315\n continuing with log_level = \"WARN\"");
+        LevelFilter::Warn
+    });
+    tide::log::with_level(log_level);
     let db = db_connection(&config.db_uri).await?;
 
     // check if file_dir exists and panic if it doesn't & we can't create it
