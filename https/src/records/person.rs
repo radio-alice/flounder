@@ -21,19 +21,16 @@ impl NewPerson {
     {
       errors.push("pick a different name buddy");
     }
-    // omit checking for alphanumerics bc unicode usernames seem cool
-    // feel free to uncomment if thats a security risk
-    // TODO prevent sql injection here???
-    // if !self
-    //         .username
-    //         .chars()
-    //         .all(|c| c.is_ascii_alphanumeric() || c == '-')
-    //     {
-    //         errors.push("Username must only contain a-z characters and hyphens");
-    //     }
+    if !self
+      .username
+      .chars()
+      .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+      errors.push("Username must only contain a-z, 0-9, '-', and '_'");
+    }
     if !self.email.contains('@') {
       // world's dumbest email verification (we dont really use email)
-      errors.push("pleeeeease use a more real fake email");
+      errors.push("that's not an email");
     }
     if self.password != self.password2 {
       errors.push("Passwords do not match");
